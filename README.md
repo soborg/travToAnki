@@ -1,13 +1,27 @@
-# Traverse Exporter
+# Traverse To Anki Exporter
 
-This tool allows you to download all your notes for all cards that are open in a Traverse graph.
-Why Does This Project Exist?
+This tool allows you to selectively add character/hanzi-cards from Traverse to Anki.
+
+## Why Does This Project Exist?
 
 Traverse is a proprietary and closed platform, with extremely limited/non-existing options to configure and tinker.
-This tool allows a user to create Anki cards based on information available to the user from Traverse with 1 click per card.
+There are also a number of functional drawbacks:
 
-The tool:
-* exports the required card info, character, keyword, notes
+* It uses an adaptation of the SuperMemo-2 algorithm. This algorithm is ancient, much better algorithms exist (like the FSRS algorithm which is natively available in newer versions of Anki).
+* UI/UX is poor and resource heavy. Once you get past a few hundred cards, the UI becomes sluggish and annoying.
+* no offline mode.
+* Poor support on mobile devices.
+
+Traverse have had a number of serious bugs in the past: 
+* service is unavailable
+* certain cards where no longer available to the user
+* certain decks where not available to the user (what?!)
+
+Anki is an Open Source platform with near infinite possibilites. You can change most things exactly to your liking and best of all: you *OWN* your own data.
+
+
+The tool does:
+* export card info, such as character, keyword, notes
 * downloads associated audio (technically Anki does this for you)
 * fetches a stroke order gif from a third party website  (technically Anki does this for you)
 
