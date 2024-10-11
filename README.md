@@ -8,7 +8,7 @@ Traverse is a proprietary and closed platform, with extremely limited/non-existi
 There are also a number of functional drawbacks:
 
 * It uses an adaptation of the SuperMemo-2 algorithm. This algorithm is ancient, much better algorithms exist (like the FSRS algorithm which is natively available in newer versions of Anki).
-* UI/UX is poor and resource heavy. Once you get past a few hundred cards, the UI becomes sluggish and annoying.
+* UI/UX is poor and resource heavy. Once you get past a few hundred cards, the UI becomes sluggish and annoying, even on high-end PCs.
 * no offline mode.
 * Poor support on mobile devices.
 
