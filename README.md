@@ -13,9 +13,10 @@ There are also a number of functional drawbacks:
 * Poor support on mobile devices.
 
 Traverse have had a number of serious bugs in the past: 
-* service is unavailable
-* certain cards where no longer available to the user
-* certain decks where not available to the user (what?!)
+* service is unavailable.
+* certain cards where no longer available to the user.
+* certain decks where temporarily not available to the user (how?!).
+* users accidentally adding thousands of cards to immediate review without any confirmation dialog, and without any undo option. Even customer support was slow and unhelpful.
 
 Anki is an Open Source platform with near infinite possibilites. You can change most things exactly to your liking and best of all: you *OWN* your own data.
 
