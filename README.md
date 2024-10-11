@@ -45,11 +45,12 @@ TPV/MSLK/etc. may come even later.
 * Open the following user script: https://github.com/soborg/travToAnki/raw/refs/heads/main/travToAnki.user.js
 * A prompt should appear automatically, click Install to install.
 
+
 # Using the Tool:
 
-Open Traverse and open a card you'd like to add to Anki, a 'Anki++' button should appear top-right.
-Click the button, a green checkmark should flash briefly if it succeeded.
-Verify in your Anki `Mining` deck that the new card is added. If it's not, something's broken, create an issue or contact me if you know my contact details.
+* Open Traverse and open a card you'd like to add to Anki, an 'Anki++' button should appear top-right.
+* Click the button, a green checkmark should flash briefly if it succeeded.
+* Verify in your Anki `Mining` deck that the new card is added. If it's not, something's broken, create an issue or contact me if you know my contact details.
 
 
 ## Loop
