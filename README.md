@@ -48,6 +48,7 @@ TPV/MSLK/etc. may come even later.
 
 # Using the Tool:
 
+* Anki must be running. AnkiConnect must be enabled.
 * Open Traverse and open a card you'd like to add to Anki, an 'Anki++' button should appear top-right.
 * Click the button, a green checkmark should flash briefly if it succeeded.
 * Verify in your Anki `Mining` deck that the new card is added. If it's not, something's broken, create an issue or contact me if you know my contact details.
