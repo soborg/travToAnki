@@ -20,6 +20,8 @@ Traverse have had a number of serious bugs in the past:
 
 Anki is an Open Source platform with near infinite possibilites. You can change most things exactly to your liking and best of all: you *OWN* your own data.
 
+Anki has a massive supportive and active community. Traverse has a tiny team and a very fragmented community. In the language learning community in large, nobody knows what Traverse is, almost everyone knows what Anki is.
+
 
 The tool does:
 * export card info, such as character, keyword, notes
