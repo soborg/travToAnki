@@ -8,8 +8,16 @@ This tool allows a user to create Anki cards based on information available to t
 
 The tool:
 * exports the required card info, character, keyword, notes
-* downloads associated audio
-* fetches a stroke order gif from a third party website
+* downloads associated audio (technically Anki does this for you)
+* fetches a stroke order gif from a third party website  (technically Anki does this for you)
+
+
+The tool does not:
+* access any information you do not already have full access to.
+
+
+Please do not:
+* be a jerk and publish the extracted cards anywhere.
 
 # Limitations
 
@@ -51,3 +59,11 @@ Verify in your Anki `Mining` deck that the new card is added. If it's not, somet
 * if the former, create a new deck called 'Mining'.
 * repeat until you've exhausted the cards in Traverse: congratulations!
 
+
+
+# Liability
+
+This tool allows you to create personal copies of the information available to you in Traverse, this is in accordance with the Mandarin Blueprint Terms of Use.
+Do not violate the Terms of Use of Mandarin Blueprint and do not infringe on their copyright.
+
+I am not liable for any use or misuse of this tool.
