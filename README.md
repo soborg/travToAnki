@@ -15,16 +15,19 @@ There are also a number of functional drawbacks:
 Traverse have had a number of serious bugs in the past: 
 * service is unavailable.
 * certain cards where no longer available to the user.
-* certain decks where temporarily not available to the user (how?!).
-* users accidentally adding thousands of cards to immediate review without any confirmation dialog, and without any undo option. Even customer support was slow and unhelpful.
+* certain decks/traverses where suddenly temporarily not available to the user (how?!).
+* users accidentally adding thousands of cards to immediate review without any confirmation dialog, and without any undo option. Even customer support took more than a week to responds and was ultimately unhelpful.
+* very limited options for creating new decks/traverses, unless you're willing to pay a whopping $15 a month.
 
 Anki is an Open Source platform with near infinite possibilites. You can change most things exactly to your liking and best of all: you *OWN* your own data.
 
-Anki has a massive supportive and active community. Traverse has a tiny team and a very fragmented community. In the language learning community in large, nobody knows what Traverse is, almost everyone knows what Anki is.
+Anki has a massive supportive and active community. Traverse has a tiny team and a very fragmented community. In the broader language learning community, nobody knows what Traverse is, almost everyone knows what Anki is.
 
+
+## What is this tool?
 
 The tool does:
-* export card info, such as character, keyword, notes
+* export Traverse card/note info, such as character, keyword, notes
 * downloads associated audio (technically Anki does this for you)
 * fetches a stroke order gif from a third party website  (technically Anki does this for you)
 
@@ -38,11 +41,9 @@ Please do not:
 
 # Limitations
 
-Only supports character cards. No current support for sentence or prop cards or other cards, such as TPV, MSLK, Pronunciation Mastery, etc.
+Only supports character and sentence cards. No current support for prop cards or other cards, such as TPV, MSLK, Pronunciation Mastery, etc.
 
-Sentence and props may come later.
-
-TPV/MSLK/etc. may come even later.
+Props/TPV/MSLK/etc. may come later.
 
 # Installation
 
