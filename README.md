@@ -16,12 +16,17 @@ Traverse have had a number of serious bugs in the past:
 * service is unavailable.
 * certain cards where no longer available to the user.
 * certain decks/traverses where suddenly temporarily not available to the user (how?!).
-* users accidentally adding thousands of cards to immediate review without any confirmation dialog, and without any undo option. Even customer support took more than a week to responds and was ultimately unhelpful.
+* users accidentally adding thousands of cards to immediate review without any confirmation dialog, and without any undo option. Even customer support took more than a week to respond and was ultimately unhelpful.
 * very limited options for creating new decks/traverses, unless you're willing to pay a whopping $15 a month.
 
 Anki is an Open Source platform with near infinite possibilites. You can change most things exactly to your liking and best of all: you *OWN* your own data.
 
 Anki has a massive supportive and active community. Traverse has a tiny team and a very fragmented community. In the broader language learning community, nobody knows what Traverse is, almost everyone knows what Anki is.
+
+To be fair, Traverse has a number of positive features:
+* Content creators can easily deliver new notes or traverses to their users.
+* Content creators are in full control of their data and intellectual property.
+* Content creators can easily deliver fixes out to their users.
 
 
 ## What is this tool?
