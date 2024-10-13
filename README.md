@@ -92,12 +92,16 @@ Do not violate the Terms of Use of Mandarin Blueprint and do not infringe on the
 Excerpt from https://www.mandarinblueprint.com/terms-and-conditions/
 
 ```
-These Terms of Service permit you to use the Service for your personal, non-commercial use only. You must not reproduce, distribute, modify, create derivative works of, publicly display, publicly perform, republish, download, store or transmit any of the material on our Service, except as follows:
+These Terms of Service permit you to use the Service for your personal, non-commercial use only.
+You must not reproduce, distribute, modify, create derivative works of,
+publicly display, publicly perform, republish, download, store or transmit any of the material on our Service,
+except as follows:
 
-    Your computer may temporarily store copies of such materials in RAM incidental to your accessing and viewing those materials.
-    You may store files that are automatically cached by your Web browser for display enhancement purposes.
-    You may download one copy of Content for your own personal, non-commercial use and not for further reproduction, publication or distribution.
-    If we provide desktop, mobile or other applications for download, you may download a single copy to your computer or mobile device solely for your own personal, non-commercial use, provided you agree to be bound by our end user license agreement for such applications.
+   * Your computer may temporarily store copies of such materials in RAM incidental to your accessing and viewing those materials.
+   * You may store files that are automatically cached by your Web browser for display enhancement purposes.
+   * You may download one copy of Content for your own personal, non-commercial use and not for further reproduction, publication or distribution.
+   * If we provide desktop, mobile or other applications for download, you may download a single copy to your computer
+     or mobile device solely for your own personal, non-commercial use, provided you agree to be bound by our end user license agreement for such applications.
 ```
 (October 2024)
 
