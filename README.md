@@ -72,7 +72,7 @@ Props/TPV/MSLK/etc. may come later.
 # Using the Tool:
 
 * Anki must be running. AnkiConnect must be enabled.
-* Open Traverse and open a card you'd like to add to Anki, an 'Anki++' button should appear top-right.
+* Open Traverse and open a card you'd like to add to Anki, an `Anki++` button should appear top-right after a few seconds.
 * Click the button, a green checkmark should flash briefly if it succeeded.
 * Verify in your Anki `Mining` deck that the new card is added. If it's not, something's broken, create an issue or contact me if you know my contact details.
 
@@ -85,10 +85,21 @@ Props/TPV/MSLK/etc. may come later.
 * repeat until you've exhausted the cards in Traverse: congratulations!
 
 
-
 # Liability
 
-This tool allows you to create personal copies of the information available to you in Traverse, this is in accordance with the Mandarin Blueprint Terms of Use.
 Do not violate the Terms of Use of Mandarin Blueprint and do not infringe on their copyright.
 
-I am not liable for any use or misuse of this tool.
+Excerpt from https://www.mandarinblueprint.com/terms-and-conditions/
+
+```
+These Terms of Service permit you to use the Service for your personal, non-commercial use only. You must not reproduce, distribute, modify, create derivative works of, publicly display, publicly perform, republish, download, store or transmit any of the material on our Service, except as follows:
+
+    Your computer may temporarily store copies of such materials in RAM incidental to your accessing and viewing those materials.
+    You may store files that are automatically cached by your Web browser for display enhancement purposes.
+    You may download one copy of Content for your own personal, non-commercial use and not for further reproduction, publication or distribution.
+    If we provide desktop, mobile or other applications for download, you may download a single copy to your computer or mobile device solely for your own personal, non-commercial use, provided you agree to be bound by our end user license agreement for such applications.
+```
+(October 2024)
+
+
+The developer(s) of this tool can not be held liable for any use or misuse of this tool.
