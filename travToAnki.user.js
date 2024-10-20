@@ -36,41 +36,59 @@
         xhr.open('POST', 'http://127.0.0.1:8765');
         xhr.send(JSON.stringify({action, version, params}));
     });
-  };
+	};
 
   function createAnkiNote(card) {
     var audio_fields = [];
     var fields = {};
     var tags = card['tags'];
-    tags.push("soborg");
     var modelName = "";
     var noteTag = "";
     var notes = "";
     var pictures = [];
 
-    card["audio"].forEach(a => {
-      var split_fields = a.split("/");
-      var filename = split_fields[split_fields.length-1];
-      audio_fields.push({
-        "url": a,
-        "filename": filename,
-        "skipHash": "",
-        "fields": ["AUDIO"]
-      })
-    });
-
     if (card["type"] == "sentence") {
+      notes = `CHARACTERS: <br/>
+${card["characters"].join("<br/>")}
+`;
       fields = {
-  	"Sentence": card["hanzi"],
-    	"English": card["keyword"],
-      	"Notes": notes
+        "Sentence": card["hanzi"],
+        "English": card["keyword"],
+        "Notes": notes
       }
       modelName = "MB Cloze";
       noteTag = "SENTENCE";
+      var cloze = card["word"].replace(card["characters"][0], `{{c1::${card["characters"][0]}}}`);
+      fields["Sentence"] = fields["Sentence"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${cloze}</span>`);
+      fields["Top-Down Words"] = `${card["top-down"].join("<br/>")}`;
+      card["audio"].forEach(a => {
+        var split_fields = a.split("/");
+        var filename = split_fields[split_fields.length-1];
+        if (filename.length > 36) {
+          filename = tags[0] + "-" + generateUID(filename)+'.mp3';
+        }
+        audio_fields.push({
+          "url": a,
+          "filename": filename,
+          "skipHash": "",
+          "fields": ["Audio"]
+        })
+      });
+
     }
 
+
     if (card["type"] == "movie review") {
-      notes = `ACTOR: ${card["actor"]}<br/>SET: ${card["set"]}<br/>PROPS: ${card["props"]}<br/><br/>NOTES: ${card["notes"].join("<br/>")}`;
+      notes = `ACTOR: ${card["actor"]}
+<br/>
+SET: ${card["set"]}
+<br/>
+PROPS: <br/>
+${card["props"].join("<br/>")}
+<br/>
+<br/>
+${card["notes"].join("<br/>")}
+`;
       fields = {
         "HANZI": card["hanzi"],
         "KEYWORD": card["keyword"],
@@ -80,7 +98,7 @@
       modelName = "MOVIE REVIEW";
       noteTag = "4-MAKE-A-MOVIE";
       var image_url = `https://dragonmandarin.com/media/hanzi5-${card["hanzi"]}.gif`
-      var image_filename = `hanzi5-${card["hanzi"]}.gif`;
+    	var image_filename = `hanzi5-${card["hanzi"]}.gif`;
       pictures.push({
         "url": image_url,
         "filename": image_filename,
@@ -89,8 +107,19 @@
           "STROKE ORDER"
         ]
       });
-    }
 
+      card["audio"].forEach(a => {
+        var split_fields = a.split("/");
+        var filename = split_fields[split_fields.length-1];
+        audio_fields.push({
+          "url": a,
+          "filename": filename,
+          "skipHash": "",
+          "fields": ["AUDIO"]
+        })
+      });
+
+    }
     if (modelName == "") {
       console.log("malformed params, can not add card:", card);
       return;
@@ -119,9 +148,9 @@
 
     console.log(card);
     console.log(params);
-    
+
     anki_invoke('addNote', 6, params).then(result => {
-      createSuccessIcon();
+	    createSuccessIcon();
     });
 
   };
@@ -141,6 +170,14 @@
       }
     });
   }
+  
+  function generateUID() {
+    var firstPart = (Math.random() * 466566) | 0;
+    var secondPart = (Math.random() * 466566) | 0;
+    firstPart = ("00000" + firstPart.toString(36)).slice(-5);
+    secondPart = ("00000" + secondPart.toString(36)).slice(-5);
+    return firstPart + secondPart;
+  };
 
   function parseTraverseCard() {
     var htmlchildren = document.getElementsByClassName("ProseMirror")[0].children;
@@ -161,7 +198,9 @@
       'props': [],
       'notes': [],
       'characters': [],
-      'tags': []
+      'tags': [],
+      'top-down': [],
+      'word': "",
     };
 
     attachCardType(card, children);
@@ -185,8 +224,10 @@
   function attachNotes(card) {
     var edit_fields = document.getElementsByClassName("group/editor")
     for (var elm of edit_fields) {
-      if (elm.textContent.length > 0 && elm.getAttribute('id').indexOf("NOTES") > 0) {
-        card['notes'].push(elm.textContent);
+      if (elm.textContent && elm.getAttribute('id').indexOf("NOTES") > 0) {
+        if (elm.textContent.length > 0) {
+        	card['notes'].push(elm.textContent);
+        }
       }
     }
   }
@@ -203,14 +244,27 @@
     for (var idx in children) {
       var idx = parseInt(idx);
       var child = children[idx];
+      if (child.tagName == "P" && child.textContent.length > 3 && child.children.length == 0) {
+        if (child.textContent.indexOf("用法") >= 0) {
+					;
+        } else {
+          card['top-down'].push(child.textContent);
+        }
+      }
       if (child.tagName == "H2") {
         card["hanzi"] = child.textContent;
         card["keyword"] = children[idx+1].textContent; // the next element is usually cloze keyword
+        card["word"] = child.getElementsByTagName("mark")[0].textContent;
       }
       else if (child.textContent.startsWith("Characters:")) {
         for (var propelm of child.children) {
           if (!propelm.textContent || propelm.textContent == "Characters:") { continue }
-          card['characters'].push(propelm.textContent.trim());
+          var textContent = propelm.textContent.trim();
+          if (textContent == "Untitled") {
+            var splits = propelm.getElementsByTagName('a')[0].getAttribute("href").split("/");
+            textContent = splits[splits.length-1];
+          }
+          card['characters'].push(textContent);
         }
       }
       else {
@@ -292,7 +346,7 @@
     }
   }
 
-  console.log("LOADED?!?!");
+  console.log("plugin loaded");
   window.setInterval(areWeThereYet, 5000); // occasional check to see if we're in the right spot
 
 })();
