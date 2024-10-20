@@ -23,9 +23,9 @@ You must have:
 * Anki must be running. AnkiConnect must be enabled.
 * Open Traverse and open a card you'd like to add to Anki, an `Anki++` button should appear top-right after a few seconds.
 * Click the button, a green checkmark should flash briefly if it succeeded.
-* Verify in your Anki `Mining` deck that the new note is added. If it's not, something's broken, create an issue or contact me if you know my contact details.
+* Verify in your Anki `Mining` deck that the new note is added (you may have to click the `Mining` deck in the Browse menu to refresh). If it's not, something's broken, create an issue or contact me if you know my contact details.
 
-Exported notes are unsuspended by default, suspend them manually in the Browse-menu.
+Exported notes are unsuspended by default, suspend them manually if you don't want to review them just yet.
 
 
 ## Work Flow
@@ -33,7 +33,7 @@ Exported notes are unsuspended by default, suspend them manually in the Browse-m
 * add a bunch of cards from Traverse.
 * rename the deck, or move the cards to other decks as you please.
 * if the former, create a new deck called 'Mining'.
-* repeat until you've exhausted the cards in Traverse: congratulations!
+* repeat until you're done.
 
 
 # Liability
