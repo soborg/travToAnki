@@ -58,8 +58,10 @@ ${card["characters"].join("<br/>")}
       }
       modelName = "MB Cloze";
       noteTag = "SENTENCE";
-      var cloze = card["word"].replace(card["characters"][0], `{{c1::${card["characters"][0]}}}`);
-      fields["Sentence"] = fields["Sentence"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${cloze}</span>`);
+      if (card["word"].length > 0) {
+      	var cloze = card["word"].replace(card["characters"][0], `{{c1::${card["characters"][0]}}}`);
+      	fields["Sentence"] = fields["Sentence"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${cloze}</span>`);
+      }
       fields["Top-Down Words"] = `${card["top-down"].join("<br/>")}`;
       card["audio"].forEach(a => {
         var split_fields = a.split("/");
@@ -246,7 +248,7 @@ ${card["notes"].join("<br/>")}
       var child = children[idx];
       if (child.tagName == "P" && child.textContent.length > 3 && child.children.length == 0) {
         if (child.textContent.indexOf("用法") >= 0) {
-					;
+          ;
         } else {
           card['top-down'].push(child.textContent);
         }
@@ -254,7 +256,10 @@ ${card["notes"].join("<br/>")}
       if (child.tagName == "H2") {
         card["hanzi"] = child.textContent;
         card["keyword"] = children[idx+1].textContent; // the next element is usually cloze keyword
-        card["word"] = child.getElementsByTagName("mark")[0].textContent;
+        var mark_elm = child.getElementsByTagName("mark")[0];
+        if (mark_elm != undefined) {
+          card["word"] = mark_elm.textContent;
+        }
       }
       else if (child.textContent.startsWith("Characters:")) {
         for (var propelm of child.children) {
