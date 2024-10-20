@@ -8,7 +8,7 @@ You must have:
 * GreaseMonkey extension for Firefox, TamperMonkey extension for Chrome/Chromium/Edge
 * A user account on Traverse
 * Anki with AnkiConnect installed (see this page for installation: https://foosoft.net/projects/anki-connect/)
-* You must the deck types called `MOVIE REVIEW` (for characters) and `MB CLOZE` (for sentences) available in Anki. If you've previously installed an MB Anki deck at least once, they should be there.
+* You must have the deck types called `MOVIE REVIEW` (for characters) and `MB CLOZE` (for sentences) available in Anki. If you've previously installed an MB Anki deck at least once, they should already be there.
 * You must have a deck called `Mining`, it is currently hardcoded into the script to add new notes to this deck. May add option to configure later.
 
 
