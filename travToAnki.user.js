@@ -36,7 +36,7 @@
         xhr.open('POST', 'http://127.0.0.1:8765');
         xhr.send(JSON.stringify({action, version, params}));
     });
-	};
+  };
 
   function createAnkiNote(card) {
     var audio_fields = [];
@@ -51,18 +51,18 @@
       notes = `CHARACTERS: <br/>
 ${card["characters"].join("<br/>")}
 `;
-      fields = {
-        "Sentence": card["hanzi"],
-        "English": card["keyword"],
-        "Notes": notes
-      }
+			fields = {
+  	    "Sentence": card["hanzi"],
+    	  "English": card["keyword"],
+      	"Notes": notes
+    	}
       modelName = "MB Cloze";
       noteTag = "SENTENCE";
-      if (card["word"].length > 0) {
+      if (card["word"]) {
       	var cloze = card["word"].replace(card["characters"][0], `{{c1::${card["characters"][0]}}}`);
       	fields["Sentence"] = fields["Sentence"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${cloze}</span>`);
       }
-      fields["Top-Down Words"] = `${card["top-down"].join("<br/>")}`;
+			fields["Top-Down Words"] = `${card["top-down"].join("<br/>")}`;
       card["audio"].forEach(a => {
         var split_fields = a.split("/");
         var filename = split_fields[split_fields.length-1];
@@ -81,7 +81,7 @@ ${card["characters"].join("<br/>")}
 
 
     if (card["type"] == "movie review") {
-      notes = `ACTOR: ${card["actor"]}
+ 	 		notes = `ACTOR: ${card["actor"]}
 <br/>
 SET: ${card["set"]}
 <br/>
@@ -122,13 +122,13 @@ ${card["notes"].join("<br/>")}
       });
 
     }
-    if (modelName == "") {
+		if (modelName == "") {
       console.log("malformed params, can not add card:", card);
       return;
     }
     tags.push(noteTag);
 
-    var params = {
+		var params = {
         "note": {
             "deckName": "Mining",
             "modelName": modelName,
@@ -150,7 +150,7 @@ ${card["notes"].join("<br/>")}
 
     console.log(card);
     console.log(params);
-
+    
     anki_invoke('addNote', 6, params).then(result => {
 	    createSuccessIcon();
     });
@@ -173,18 +173,18 @@ ${card["notes"].join("<br/>")}
     });
   }
   
-  function generateUID() {
-    var firstPart = (Math.random() * 466566) | 0;
-    var secondPart = (Math.random() * 466566) | 0;
-    firstPart = ("00000" + firstPart.toString(36)).slice(-5);
-    secondPart = ("00000" + secondPart.toString(36)).slice(-5);
-    return firstPart + secondPart;
-  };
+	function generateUID() {
+  	  var firstPart = (Math.random() * 466566) | 0;
+    	var secondPart = (Math.random() * 466566) | 0;
+    	firstPart = ("00000" + firstPart.toString(36)).slice(-5);
+    	secondPart = ("00000" + secondPart.toString(36)).slice(-5);
+    	return firstPart + secondPart;
+	};
 
   function parseTraverseCard() {
     var htmlchildren = document.getElementsByClassName("ProseMirror")[0].children;
     var children = [];
-    for (var child of htmlchildren) {
+		for (var child of htmlchildren) {
       if (!child.textContent) { continue }
       children.push(child);
     }
@@ -213,7 +213,7 @@ ${card["notes"].join("<br/>")}
     
     var document_level = document.getElementsByClassName("max-h-full")[0].textContent.match(/\d+/)[0];
     var level_tag = "MBMLEVEL"+document_level;
-    card['tags'].push(level_tag);
+		card['tags'].push(level_tag);
 
     if (card["type"] == "movie review") { card = parseMovie(card, children); }
     if (card["type"] == "sentence") { card = parseSentence(card, children); }
@@ -248,7 +248,7 @@ ${card["notes"].join("<br/>")}
       var child = children[idx];
       if (child.tagName == "P" && child.textContent.length > 3 && child.children.length == 0) {
         if (child.textContent.indexOf("用法") >= 0) {
-          ;
+					;
         } else {
           card['top-down'].push(child.textContent);
         }
@@ -258,7 +258,7 @@ ${card["notes"].join("<br/>")}
         card["keyword"] = children[idx+1].textContent; // the next element is usually cloze keyword
         var mark_elm = child.getElementsByTagName("mark")[0];
         if (mark_elm != undefined) {
-          card["word"] = mark_elm.textContent;
+        	card["word"] = mark_elm.textContent;
         }
       }
       else if (child.textContent.startsWith("Characters:")) {
@@ -305,6 +305,41 @@ ${card["notes"].join("<br/>")}
   }
 
   function createSuccessIcon() {
+//     `
+//     <div style="margin-right: 10px;">
+//     	<svg style="position: relative; top: calc(50% - 6px); left: calc(50% - 8px);" width="17" height="13" viewBox="0 0 17 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+//       	<path d="M1 7.6L5.28571 12L16 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+//     	</svg>
+//     </div>
+//     `
+//     var div = document.createElement('div');
+//     div.setAttribute("style", "margin-right:10px;");
+    
+//     var svg = document.createElement("svg");
+//     svg.setAttribute("style", "position: relative; top: calc(50% - 6px); left: calc(50% - 8px);");
+//     svg.setAttribute("width", "17");
+//     svg.setAttribute("height", "13");
+//     svg.setAttribute("viewBox", "0 0 17 13");
+//     svg.setAttribute("fill", "none");
+//     svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+//     div.appendChild(svg);
+    
+//     var path = document.createElement("path");
+//     path.setAttribute("d", "M1 7.6L5.28571 12L16 1");
+//     path.setAttribute("stroke", "white");
+//     path.setAttribute("stroke-width", "2");
+//     path.setAttribute("stroke-linecap", "round");
+//     path.setAttribute("stroke-linejoin", "round");
+//     svg.appendChild(path);
+    
+//     var anchor = toolbar.getElementsByClassName('homescreen-button')[0].parentNode;
+    
+//     var button_like = document.createElement("button");
+//     button_like.setAttribute("class", "homescreen-button");
+//     button_like.setAttribute("id", "success-icon-yay");
+//     button_like.appendChild(div);
+//     anchor.appendChild(button_like);
+    
     var add_button = document.createElement('img');
     add_button.textContent = '';
     add_button.setAttribute("id", "success-icon-yay");
@@ -313,6 +348,7 @@ ${card["notes"].join("<br/>")}
     var anchor = toolbar.getElementsByClassName('homescreen-button')[0].parentNode;
     anchor.appendChild(add_button);
 
+    
     function removeSuccess() {
       document.getElementById("success-icon-yay").remove();
     };
@@ -325,7 +361,7 @@ ${card["notes"].join("<br/>")}
       console.log("No toolbar found, can not attach download button");
       return
     }
-    toolbar = toolbars[0];
+		toolbar = toolbars[0];
     var add_button = document.createElement('button');
     add_button.textContent = 'Anki++';
     add_button.classList.toggle('homescreen-button');
@@ -351,7 +387,7 @@ ${card["notes"].join("<br/>")}
     }
   }
 
-  console.log("plugin loaded");
+  console.log("LOADED?!?!");
   window.setInterval(areWeThereYet, 5000); // occasional check to see if we're in the right spot
 
 })();
