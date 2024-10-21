@@ -339,7 +339,7 @@ ${card["notes"].join("<br/>")}
 //     button_like.setAttribute("id", "success-icon-yay");
 //     button_like.appendChild(div);
 //     anchor.appendChild(button_like);
-    
+    var toolbar = document.getElementsByClassName('MuiToolbar-regular')[0];
     var add_button = document.createElement('img');
     add_button.textContent = '';
     add_button.setAttribute("id", "success-icon-yay");
@@ -347,7 +347,6 @@ ${card["notes"].join("<br/>")}
     add_button.setAttribute("src", ok_icon);
     var anchor = toolbar.getElementsByClassName('homescreen-button')[0].parentNode;
     anchor.appendChild(add_button);
-
     
     function removeSuccess() {
       document.getElementById("success-icon-yay").remove();
@@ -361,7 +360,7 @@ ${card["notes"].join("<br/>")}
       console.log("No toolbar found, can not attach download button");
       return
     }
-		toolbar = toolbars[0];
+    var toolbar = toolbars[0];
     var add_button = document.createElement('button');
     add_button.textContent = 'Anki++';
     add_button.classList.toggle('homescreen-button');
