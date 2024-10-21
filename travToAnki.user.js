@@ -1,6 +1,7 @@
 // ==UserScript==
-// @name     Traverse Export To Anki
-// @version  1
+// @name         Traverse2Anki
+// @description  Export Traverse stuff to Anki
+// @version      1
 // @grant        unsafeWindow
 // @match        https://traverse.link/*
 // ==/UserScript==
