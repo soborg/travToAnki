@@ -11,9 +11,8 @@ You must have:
 * You must have the deck types called `MOVIE REVIEW` (for characters) and `MB CLOZE` (for sentences) available in Anki. If you've previously installed an MB Anki deck at least once, they should already be there.
 * You must have a deck called `Mining`, it is currently hardcoded into the script to add new notes to this deck. May add option to configure later.
 
-### Special settings for Chrome
+### Special settings if you're using Chrome
 
-- In a new tab, open `chrome://flags/#mutation-events` and set `Enable (deprecated) synchronous mutation events` to `Enabled`.
 - In Anki AnkiConnect settings (`Tools -> Add-ons -> click AnkiConnect -> Config`), add `"https://traverse.link"` to `webCorsOriginList` list. Complete config should be as follows, assuming nothing else was previously changed:
 
 ```json
