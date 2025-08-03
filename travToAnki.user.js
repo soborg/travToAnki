@@ -1,74 +1,113 @@
 // ==UserScript==
-// @name         Traverse2Anki
-// @description  Export Traverse stuff to Anki
-// @version      1
+// @name         Traverse Export To Anki
+// @description  Export open Traverse cards to Anki (character or sentence cards)
+// @version      2
 // @grant        unsafeWindow
+// @grant        GM.setValue
+// @grant        GM.getValue
 // @match        https://traverse.link/*
 // ==/UserScript==
 
+/*
+Supports:
+
+- Almost every kind of note type from Traverse (MB Traverses).
+
+
+Requirements:
+ - Must have all the note types from the legacy anki decks (PROP REVIEW, SET REVIEW, ACTOR REVIEW, WORD CONNECTION REVIEW. MB CLOZE.
+
+Then add this note type (will be used for character notes, because it's better than the legacy note type):
+ - `CHARACTER NOTE` (fields: `HANZI`, `STROKE ORDER`, `KEYWORD`, `PINYIN`, `ACTOR`, `SET`, `PROPS`, `NOTES`, `AUDIO`, `SOURCE LESSON`)
+
+ Note type should be a `Basic (and reversed card)` if you want both recall and production cards.
+*/ 
+
+
 (function() {
-  var ok_icon = "data:image/gif;base64,R0lGODlhkAGQAZEDAN/m34fChze3N////yH/C05FVFNDQVBFMi4wAwEAAAAh+QQFBAADACwAAAAAkAGQAQAC/5yPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s73/g8MCofEovGITCqXzKbzCY1Kp9Sq9YrNarfcrvcLDovH5LL5jE6r1+y2+w2Py+f0uv2Oz+v3/L7/DxgoOEhYaHiImKi4yNjo+AgZKTlJWWl5iZmpucnZ6fkJGio6SlpqeoqaqrrK2ur6ChsrO0tba3uLm6u7y9vr+wscLDxMXGx8jJysvMzc7PwMHS09TV1tfY2drW0EMBAQ4L1dGyBQbn4u/kp+zm4Onr7aLl/+Dm+6Pi9vf5rfX78Pqp9AgKHwCZT3j+CmgwMVcjLIsJ1DThH7TdQEseK5bv8XL2nM1/FSxo/lQloiOY+jyUgo562UNLLlS5YtJc6EVJNdwpuKcrLj6SgmyZ1AD/lEV3SR0I9EkxI6as5pT6gCmkoNRFXAVURZrW71k/WrobBiCS39WPYp1bRqobIVRPbtn7Ma5QKKa7cP3rx69vLFQzei179y/BKuE5jh4MNvDDOWk/jg4sdsHFN+E1ng5MtpLHOuTHXzZzOeR3cObbrw2tRwSrMuk7nh6zax84me/cU17jC1Xe4G7fa3mt4IhavRbZwLcZvJzyBvnmW5TuikV1MfI/3c7etUnnOvgvp7GO/io2R3Vx4M+fRPwrPnsv49E/fyo1uvnyU+/iPnS+7/z3/ff1T0p5WAV+hn4BD0JWhegAxCseCDThAo4RQRVrgEhRhC6OCGSnToIRIahjgfVNuRuMOIKCZx4YpEgOiiEC3GGASMNP6g4o0KmqijETb2uMOMQAYZ3JBB5GhkDz8maQOSTOrQ34lPtrDklDNUaSUMWGb5wpZcshDllzp4KWYKTpYZQ5ho2kDmmiWo6eaVRcYpQ5t0hgDnnV3OqacLPPb5Qn+AasnnoGb+aegKgibKgp2MZoDooyc4KqkFkVZKwqKYmkDpphJc6ikImoYqQqekOgDqqRyMqqoHpraqQKqwYsDqrBq8aqsBheZ6Qa28WrrrrxTIKmwEvhb7abDI/0Kg7HX+adFscwZJ6WO0ybVD7YtHZWuabwNa29w83PpwLHcgWXjUfrZJAS50S0FRrniaOUGseGfRm66AkmXYrrkHfZivgYGxGLCBivHX73eBjRvothJGVK1PGAqmrcQVVjTEeQyHC3GNBUuY2MYoJPxeRSK/6XCIGJP7MYaR+UByfS/zEHN9JqeY8oor51AzfjPj0LPPFAPt08nl3dxkyy7uTEPQ//0sZ05Gs4e0DBobyTQM5yUJ9Z4WY501lUU/WXULWz/Z9QpOPxx2CjmTPXSjY1uZ9glnZ1mX2kpzXfakc3Op0dQN7M1kZod+/WXgIxNeeN6c/i0mWo/nFKfimf8yPqXkI9yNZmwkvI0mUyNgTrfmH3Dupuiiko63465CXrnpHLCepecf0N666xqgTmdsG4N+J0kd4J645bciDqjwuxPPpe/LS/2o8hgA36fz0yNvqPTAUi6p9RVkJ3iP2k8APqZDbV+Tp+NHwPya5w+LPaO1UVC++qobG/+j8yfLfajvM5s//a2PAbDb1AAVUD9SoYR9/TvV/wgYwEotEFUR7N4BD1BA/10wgaraHwTTZ6sHIiA7uZpgrCqIqdoQJYMOHCALFbg+Ev7KhAaQIa9o6A0UekqFCGhf9LT3QlXRUIeh6k0NfaKSGSrPhsJCyTuIWMQFBhFWToQiDLMSt2L/EUh3xcJix5Y1AC8yBIxHFOO6yBhGM3qLjGoUFxpz2MafvDGNcYzKHOuInjlu0R9z1BUe++jHOgISjnEcJB3baMg6hi9RijTkHrFlyEOKMZKS9CIlH4mUSCKSkmpcpAAnSclAYtGTP7RkKCu5Nlhh8pSirNcdscjKMgqpj7CMJSpBGEsCkTKFuCqhKwHZS19a8Y0+ZCMSbTnCYb5SJsg8IQ6bect9QTMBz5ym7aa5gLZhU5Zn3GYDhOJN8oVjl+EspznPic50qnOd7GynO98Jz3jKc570rKc974nPfOpzn/zspz//CdCACnSgBC2oQQ+K0IQqdKEMbahDHwrRiEp0DKIUrahFL4rRjIqnAAAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAkEAAMALHEAOQCuACABAAL/nI+py+0Po5y02ouz3rz7D4biSJbmiabqyrbuC8fyTNf2jef6zvf+DwwKh8Si8YhMKpfMpvMJjUqn1Kr1is1qt9yu9wsOi8fksvmMTqvX7Lb7DY/L5/S6/Y7P6/f8vv8PGCg4SFhoeIiYqLjI2Oj4CBkpOUlZaXmJmam5ydnp+QkaKjpKWmp6ipqqusra6voKGys7S1tre4ubq7vL2+v7CxwsPExcbHyMnKy8zNzs/AwdLT1NXW19jZ2tvc3d7f0NHi4+Tl5ufo6err7O3u7+Dh8vP09fb3+Pn6+/z9/v/w8woMCBBAsaPIgwocKFDBs6fAgxosSJFCtavIgxo8aNLBw7evwIMqTIkSRLmjyJMqXKlSxbunwJM6bMmTRr2ryJM6fOnTx7+vwJ1EMBACH5BAUEAAMALAAAAACQAZABAAL/nI+py+0Po5y02ouz3rz7D4biSJbmiabqyrbuC8fyTNf2jef6zvf+DwwKh8Si8YhMKpfMpvMJjUqn1Kr1is1qt9yu9wsOi8fksvmMTqvX7Lb7DY/L5/S6/Y7P6/f8vv8PGCg4SFhoeIiYqLjI2Oj4CBkpOUlZaXmJmam5ydnp+QkaKjpKWmp6ipqqusra6voKGys7S1tre4ubq7vL2+v7CxwsPExcbHyMnKy8zNzs/AwdLT1NXW19jZ2tvc3d7f0NHi4+Tl5ufo6err7O3u7+Dh8vP09fb3+Pn6+/z9/v/w8woMCBBAsaPIgwocKFDBs6fAgxosSJFCtavIgxo8aN/xw7evwIMqTIkSRLmjyJMqXKlSxbunwJM6bMmTRr2ryJM6fOnTx7+vwJNKjQoUSLGj2KNKnSpUybOn0KNarUqVSrWr2KNavWrVy7ev0KNqzYsWTLmj2LNq3atWzbun0LN67cuXTr2r2LN6/evXz7+v0LOLDgwYQLGz6MOLHixYwbO34MObLkyZQrW76MObPmzZw7e/4MOrTo0aRLmz6NOrXq1axbu34NO7bs2bRr276NO7fu3bx7+/4NPLjw4cSLGz+OPLny5cybO38OPbr06dSrW7+OPbv27dy7e/8OPrz48eTLmz+PPr369ezbu38PP778+fTr27+PP7/+/fz7+03/D2CAAg5IYIEGHohgggouyGCDDj4IYYQSTkhhhRZeiGGGGm7IYYcefghiiCKOSGKJJp6IYooqrshiiy6+CGOMMs5IY4023ohjjm0UAAAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALHEAxgAYABsAAAJH3CSmyx2IQpsMQkmptVnv2FUfEoojVj4jWR4rGKpv+15lDcU4m+0COpHVgA1fomNEJns+4kJYU+5CPt0wFW1BbS3Dx5l6AAsAIfkEBQQAAwAsfgDWAB0AJQAAAl+UfzHL7Y2iePTJWPO4SGnLJZ8TIiNUHueSmmcrvvB0BjM92rA33vx3W+lgK19xJgzKkMvWLzNsHZm92bMSTU2JOWOVqsmWrpQbLqz8Srel1cbpfrfj8gv5IzbcaxhGAQAh+QQJBAADACyNAPAAIAAtAAACdpSPF8Pt35I8sL45l7V4bt5JHxRK2siUIsoEasKmrxK7sxEPt3Giu5D7AVm2W/BX+/U+wuNtuWkSlTEpqjiDgnbJnbZiHQm/JCRrPDX7qNcwUz3Czqpscd3OPcM/cpXzRQbR15Ej81I4MLiCqBMSyEfI+CC3VAAAIfkEBQQAAwAsAAAAAJABkAEAAv+cj6nL7Q+jnLTai7PevPsPhuJIluaJpurKtu4Lx/JM1/aN5/rO9/4PDAqHxKLxiEwql8ym8wmNSqfUqvWKzWq33K73Cw6Lx+Sy+YxOq9fstvsNj8vn9Lr9js/r9/y+/w8YKDhIWGh4iJiouMjY6PgIGSk5SVlpeYmZqbnJ2en5CRoqOkpaanqKmqq6ytrq+gobKztLW2t7i5uru8vb6/sLHCw8TFxsfIycrLzM3Oz8DB0tPU1dbX2Nna29zd3t/Q0eLj5OXm5+jp6uvs7e7v4OHy8/T19vf4+fr7/P3+//DzCgwIEECxo8iDChwoUMGzp8CDGixIkUK1q8iDGjxo3/HDt6/AgypMiRJEuaPIkypcqVLFu6fAkzpsyZNGvavIkzp86dPHv6/Ak0qNChRIsaPYo0qdKlTJs6fQo1qtSpVKtavYo1q9atXLt6/Qo2rNixZMuaPYs2rdq1bNu6fQs3rty5dOvavYs3r969fPv6/Qs4sODBhAsbPow4seLFjBs7fgw5suTJlCtbvow5s+bNnDt7/gw6tOjRpEubPo06terVrFu7fg07tuzZtGvbvo07t24BvHv77h3A8O/hvYUTHx6c8HHihZczH+wcOfTovwcHoF5dMHbfyQFf3857OvjugMGH125egODv4MW3D8x+O3m/6dWjH3//vff08/vW/l/PX37bAWhef3z9F1h9Bu6FYHkB7peegNgtmFd8Ayb44F8WYichdR16iGGBIZoHX4N/1WefhibSlyGLEUIoooMvnriifzUyeKNeG1JHIV4ojqifXzuCSOOMLsYo5I8yImlji3wNGR2Q8i1Jooo55oVij3ahmGJfUDon5YVHVpmkglQGeaCSZTqJo5FNMpkmmzpeiaWbXtr5JpElTmicc1rmmV1iG/6pW6GGHopoooouymijjj4KaaSSTkpppZZeimmmmm7KaaeefgpqqKKOSmqppp6Kaqqqrspqq66+Cmusss5Ka6223oprrrruymuvvv4KbLDCDktsscYeW0kBACH5BAUEAAMALKgANQEaAB4AAAJOlI+Jwz0KlWuxmjCfrXlX7HicE4hQZyZoupBsG77XJB90LUxlDVL4zXP9YjWgTIfrDXZHI2v1ymhYSt9TOhVVhZ4tNOLNBJgSrHl8GEsLACH5BAkEAAMALK4ARwEXABIAAAIylI+Zw+rfnjxhzCsslnq77iVB+I0kUp0IA5KsKlTvyTKmV9d4zt6SzOs9gMFc5VgcFAAAIfkEBQQAAwAsAAAAAJABkAEAAv+cj6nL7Q+jnLTai7PevPsPhuJIluaJpurKtu4Lx/JM1/aN5/rO9/4PDAqHxKLxiEwql8ym8wmNSqfUqvWKzWq33K73Cw6Lx+Sy+YxOq9fstvsNj8vn9Lr9js/r9/y+/w8YKDhIWGh4iJiouMjY6PgIGSk5SVlpeYmZqbnJ2en5CRoqOkpaanqKmqq6ytrq+gobKztLW2t7i5uru8vb6/sLHCw8TFxsfIycrLzM3Oz8DB0tPU1dbX2Nna29zd3t/Q0eLj5OXm5+jp6uvs7e7v4OHy8/T19vf4+fr7/P3+//DzCgwIEECxo8iDChwoUMGzp8CDGixIkUK1q8iDGjxo3/HDt6/AgypMiRJEuaPIkypcqVLFu6fAkzpsyZNGvavIkzp86dPHv6/Ak0qNChRIsaPYo0qdKlTJs6fQo1qtSpVKtavYo1q9atXLt6/Qo2rNixZMuaPYs2rdq1bNu6fQs3rty5dOvavYs3r969fPv6/Qs4sODBhAsbPow4seLFjBs7fgw5suTJlCtbvow5s+bNnDt7/gw6tOjRpEubPo06terVrFu7fg07tuzZtGvbvo07t+7dvHv7/g08uPDhxIsbP448ufLlzJs7fw49uvTp1Ktbv449u/bt3Lt7/w4+vPjx5MubP48+vfr17Nu7fw8/vvz59Ovbv48/v/79/Pv7mCcqgAABRBaggAQGeGCAAz5WoACQNejgXhBOSOGEfFWIIYUL5pVhhwVe6GGHG+IVoogSloghiChqeOKKFu4VgIsvtiijgX3ViKBfOAZWY2AxrkgYioX9mOGIhBE5o2IDLvlfk04+CWWUUk5JZZVWXollllpuyWWXXn4JZphijklmmWaeiWaaaq7JZptuvglnnHLOSWedPBQAACH5BAkEAAMALLUAJgEUACsAAAJCnI+py+0Po5y02ouz3rybMICTQJaCZJpQqj5s6b6kI5MiU59NTtf34lu9IqxfDzYqGWM6yqzydC5XF8HUVfVot4MCACH5BAkEAAMALAAAAACQAZABAAL/nI+py+0Po5y02ouz3rz7D4biSJbmiabqyrbuC8fyTNf2jef6zvf+DwwKh8Si8YhMKpfMpvMJjUqn1Kr1is1qt9yu9wsOi8fksvmMTqvX7Lb7DY/L5/S6/Y7P6/f8vv8PGCg4SFhoeIiYqLjI2Oj4CBkpOUlZaXmJmam5ydnp+QkaKjpKWmp6ipqqusra6voKGys7S1tre4ubq7vL2+v7CxwsPExcbHyMnKy8zNzs/AwdLT1NXW19jZ2tvc3d7f0NHi4+Tl5ufo6err7O3u7+Dh8vP09fb3+Pn6+/z9/v/w8woMCBBAsaPIgwocKFDBs6fAgxosSJFCtavIgxo8aN/xw7evwIMqTIkSRLmjyJMqXKlSxbunwJM6bMmTRr2ryJM6fOnTx7+vwJNKjQoUSLGj2KNKnSpUybOn0KNarUqVSrWr2KNavWrVy7ev0KNqzYsWTLmj2LNq3atWzbun0LN67cuXTr2r2LN6/evXz7+v0LOLDgwYQLGz6MOLHixYwbO34MObLkyZQrW76MObPmzZw7e/4MOrTo0aRLmz6NOrXq1axbu34NO7bs2bRr276NO7fu3bx7+/4NPLjw4cSLGz+OPLny5cybO38OPbr06dSrW7+OPbv27dy7e/8OvmGAAQHGj1ccQID69evPF07PPn77wvLrqx8M33599371+9gH7F+AfwX4X1/5ESgff3kdiGB8fTWoH18QRrjXhPZJaGF8Ct6VoXwYdnjfhyBuaBeI6z1oogAomrgiiC1mSGKJLL5oYYx1pdjfjCLWmGOHNt7oYo8wCmnhgEHSCKGRQxKZpJI8MtkggB1KmSGVE/4oY5FWQoglkFo62SSYCHbpZZhiEkgmXVUGtuaWBA5mIQCCfelmgeERleadeu7JZ59+/glooIIOSmihhh6KaKKKLspoo44+Cmmkkk5KaaWWXopppppuymmnnn4KaqiijkpqqaaeiiqoBQAAIfkECQQAAwAsAAAAAJABkAEAAv+cj6nL7Q+jnLTai7PevPsPhuJIluaJpurKtu4Lx/JM1/aN5/rO9/4PDAqHxKLxiEwql8ym8wmNSqfUqvWKzWq33K73Cw6Lx+Sy+YxOq9fstvsNj8vn9Lr9js/r9/y+/w8YKDhIWGh4iJiouMjY6PgIGSk5SVlpeYmZqbnJ2en5CRoqOkpaanqKmqq6ytrq+gobKztLW2t7i5uru8vb6/sLHCw8TFxsfIycrLzM3Oz8DB0tPU1dbX2Nna29zd3t/Q0eLj5OXm5+jp6uvs7e7v4OHy8/T19vf4+fr7/P3+//DzCgwIEECxo8iDChwoUMGzp8CDGixIkUK1q8iDGjxo3/HDt6/AgypMiRJEuaPIkypcqVLFu6fAkzpsyZNGvavIkzp86dPHv6/Ak0qNChRIsaPYo0qdKlTJs6fQo1qtSpVKtavYo1q9atXLt6/Qo2rNixZMuaPYs2rdq1bNu6fQs3rty5dOvavYs3r969fPv6/Qs4sODBhAsbPow4seLFjBs7fgw5Mk8BAiAHoEw5gGPMmDUz5sy5MejOi0dj/mxagGfEl1NXTuw6M+vYrw/TVo34dm3CrWnbvr16cO/YwQXr3j34eHHAx5EHbl54OPHCzZf/hc4bu3DtxpVTPx6de2Dprq37rf5dd3jwhNG3Z78dfnf5z73HV/+ePnP7gsm7/56hWWsBmHdUc86p4B9pSyVoGoEl6GeUgQ6GAICBC1qogoGULSVhChqelhSDpqEg4nRJaXjCh6Ep1SEJJfrGIoYjvGgiUjSuKIKKnE0IlIY8XqAjjjaiGMKNsTHlY45B4oakjB4suWFTH4IA5YFHGRllB1im9tSUT0L51JY/QlDlmEJ5uUGVUiWZJphRoYnBliNGJaYGcoJmJlFwWlDmVHVioCZVe1IQqJ9sVnDnjlYNGkGiCgp66ASFVsXoA5NC2qKkblolJwWOyobVh2Z+aqVUnUpw6aKROpBqVaeSuWSeTTrZAKmyclhpAptuJaqlu2qloq9LevUqA1DeKmWutv9+VWwCpIbV6wLPghXsAq1qJad1x4pVra6xcsvor191a8C04BJ5gLlhZYvAtV2Ruy1Z8A5b1p3lQgmAWdWqO5aKAYq7brDx6jslwOdWmWm9CKN71sK0luWweApHTBuyoVJ85FoY14gWqQ83vPGcGoeMZ1se62YxsCSD2NbKLLN1MoxuuVwqyCSnzOvKOGOrc1wry/VzXDGLDBfJc4W8M1dDC+kzxklztXFdUdO1dJZHR/z0uxHftXTWWi+M19ZcL+x1VzHrRXZeYKPtLtAG01VlvnrxG3aQ1+l4d7Tn5YrXlvndth7H2XHJWIADlC1Z4oovznjjjj8OeeSST0555ZYxX4555ppvznnnnn8Oeuiij0566aafjnrqqq/Oeuuuvw577LLPTnvttt+Oe+66715KAQAh+QQFBAADACwAAAAAkAGQAQAC/5yPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s73/g8MCofEovGITCqXzKbzCY1Kp9Sq9YrNarfcrvcLDovH5LL5jE6r1+y2+w2Py+f0uv2Oz+v3/L7/DxgoOEhYaHiImKi4yNjo+AgZKTlJWWl5iZmpucnZ6fkJGio6SlpqeoqaqrrK2ur6ChsrO0tba3uLm6u7y9vr+wscLDxMXGx8jJysvMzc7PwMHS09TV1tfY2drb3N3e39DR4uPk5ebn6Onq6+zt7u/g4fLz9PX29/j5+vv8/f7/8PMKDAgQQLGjyIMKHChQwbOnwIMaLEiRQrWryIMaPGjf8cO3r8CDKkyJEkS5o8iTKlypUsW7p8CTOmzJk0a9q8iTOnzp08e/r8CTSo0KFEixo9ijSp0qVMmzp9CjWq1KlUq1q9ijWr1q1cu3r9Cjas2LFky5o9izat2rVs27p9Czeu3Ll069q9izev3r18+/r9C7hcgAACCgsIMABAYAaEDTs2vDjB48mQIwOgjPnw4syZA3Pm/LfxZ8x+R3NGvFe06cmo9a4Gvfd1Z72qZTuObZsy7tyPafOe7Pq349Z3hd8GWZiL8codVROvspw5R9ZYomv2SLpK7d8hMT9/sp139+xSrI/M/J2JeZHhpTNpb5vk5/RHrNPnCD95k/Xy5y//yf/aSaYpwV9JAOpXX3QpmXafDwcOiNKDDfLwoH8LQkhEgSitNmEOGgq42hAVntZSgEF8GCGHJyro0msdzjAiejCZ2EOM5Lk0og8orpQjDzuu5OIONlL2IogY4vAjSz0iySJNFRa5QnRQbqiiDUMChxONNCT50pIzSKlTkDCCGWaIYy7Hk5cvcCmTbDKQyZOYLlzZm09qRtlkT266AKdPcuJp3JQx3XkCnccFtacKbN40oqAa9AmUbI5ikGdQMaZgqHuI/knCojldegKkQsVnQqVESVpCpggaReoIqgqQlI2dLjfpTbbV+oCpRckawqtM3dqrrqwm6oGoR+UGgrBG//FaLJpOIduBr07ZiCsCxiYF7QbKYouqts5ClS0G0kJFrQaqVqtnqxdcu1S5lH4rVbgVbNsusBaca5W8EuBbVW6O0tuUvhAA/Ku9ExBcr7oQ8HuVvxOoqtWQB8PbsMG5UmyVxBHQypXACjCclXgDG+eVww4gDK7HB6D8lMYNcFyyyiBv5fICGG9l8sc3ayWyAixHNWR6MIPVs7WBilW0ARCPlfTSSMvrdFhBG00yWUUP/bS6O3t1pdLLKVaWyFEzbfLWXIuHtdX+mv2VdTmX9arKYblNrFl0a2lW3JzaffdnbPVtYVp6H5kW4LOtZTiRbQ1OYluJ1+n445oKLvmqf7RXDlfl6IYs+eZYMU5d5o/LJblcoB8quuFzJe55xKrTZXjrPANe1+tznW5X37LjfPddjO/Ou9t49e6728DTLHxexivvaeRspy4cX9GBndfYw0dfGnfZvy293MXX/RfegB14vFrwReYAYuqjz3777r8Pf/zyz09//fbfj3/++u/Pf//+/w/AAApwgAQsoAEPiMAEKnCBDGygAx8IwQhKcIIUrKAFL4jBDGpwgxzsoAc/CEIYFAAAIfkECQQAAwAs0AB0ADEAUQAAAt2cj6mrEj4Cm7TGJ7LO0nqKbWL2lcmIap3phenItu+8xsuM2wye64nLQ/kQwKBoeDDOAMiiUoMcPF9Mn3MqQGJT2i3M5xXqrtgaizwdhkVmE/qpXqvi8iy4TrrXh28lXd5W0mf0txb4MRjEh3f4gWc39lgY1ughqQc46bWIp7nVtYdp6InFGapzKRpmOqq6SZrmulVpkWqTiENbYWvDe8YICxdspAvSOUxoBax8inosO1U84cuyHNnc++ycySwH6o3MI82AO/O9du41voOdDR5uHtXuvirfmh5rXx9VAAAh+QQFBAADACwAAAAAkAGQAQAC/5yPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s73/g8MCofEovGITCqXzKbzCY1Kp9Sq9YrNarfcrvcLDovH5LL5jE6r1+y2+w2Py+f0uv2Oz+v3/L7/DxgoOEhYaHiImKi4yNjo+AgZKTlJWWl5iZmpucnZ6fkJGio6SlpqeoqaqrrK2ur6ChsrO0tba3uLm6u7y9vr+wscLDxMXGx8jJysvMzc7PwMHS09TV1tfY2drW0EMBAQ4L1dGyBQbn4u/kp+zm4Onr7aLl/+Dm+6Pi9vf5rfX78Pqp9AgKHwCZT3j+CmgwMVcjLIsJ1DThH7TdQEseK5bv8XL2nM1/FSxo/lQloiOY+jyUgo562UNLLlS5YtJc6EVJNdwpuKcrLj6SgmyZ1AD/lEV3SR0I9EkxI6as5pT6gCmkoNRFXAVURZrW71k/WrobBiCS39WPYp1bRqobIVRPbtn7Ma5QKKa7cP3rx69vLFQzei179y/BKuE5jh4MNvDDOWk/jg4sdsHFN+E1ng5MtpLHOuTHXzZzOeR3cObbrw2tRwSrMuk7nh6zax84me/cU17jC1Xe4G7fa3mt4IhavRbZwLcZvJzyBvnmW5TuikV1MfI/3c7etUnnOvgvp7GO/io2R3Vx4M+fRPwrPnsv49E/fyo1uvnyU+/iPnS+7/z3/ff1T0p5WAV+hn4BD0JWhegAxCseCDThAo4RQRVrgEhRhC6OCGSnToIRIahjgfVNuRuMOIKCZx4YpEgOiiEC3GGASMNP6g4o0KmqijETb2uMOMQAYZ3JBB5GhkDz8maQOSTOrQ34lPtrDklDNUaSUMWGb5wpZcshDllzp4KWYKTpYZQ5ho2kDmmiWo6eaVRcYpQ5t0hgDnnV3OqacLPPb5Qn+AasnnoGb+aegKgibKgp2MZoDooyc4KqkFkVZKwqKYmkDpphJc6ikImoYqQqekOgDqqRyMqqoHpraqQKqwQnrUrCAUaiutOeX6Qa28duDrrxv4JKWwCfhkLAfI5ybLbLPOPgtttNJOS2211l6Lbbbabsttt95+C2644o5Lbrnmnotuuuquy2677r4Lb7zyzktvvfbei2+++u7Lb7/+/gtwwAIPTHDBBh+McMIKL8xwww4/DHHEEk9MccUWX4xxxhpvzHHHHn8Mcsgij0xyySafjHLKKq/McssuvwxzzDLPTHPNNt+Mc84678xzzz7/DHTQQg9NdNFGH4100kovzXTTTj8NddRST0111VZfjXXWWm/Ndddefw122GKPTXbZZp+Ndtpqr812226/DXfccs9Nd91234133nrvzXfffv8NuM8FAAAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAIfkEBQQAAwAsAAAAAAEAAQAAAgJcAQAh+QQFBAADACwAAAAAAQABAAACAlwBACH5BAUEAAMALAAAAAABAAEAAAICXAEAOw==";
-
-  function anki_invoke(action, version, params={}) {
-    return new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.addEventListener('error', () => reject('failed to issue request'));
-        xhr.addEventListener('load', () => {
-            try {
-                const response = JSON.parse(xhr.responseText);
-                if (Object.getOwnPropertyNames(response).length != 2) {
-                    throw 'response has an unexpected number of fields';
-                }
-                if (!response.hasOwnProperty('error')) {
-                    throw 'response is missing required error field';
-                }
-                if (!response.hasOwnProperty('result')) {
-                    throw 'response is missing required result field';
-                }
-                if (response.error) {
-                    throw response.error;
-                }
-                resolve(response.result);
-            } catch (e) {
-                reject(e);
-            }
-        });
-
-        xhr.open('POST', 'http://127.0.0.1:8765');
-        xhr.send(JSON.stringify({action, version, params}));
-    });
+  function GM_addStyle(css) {
+      const style = document.getElementById("GM_addStyleByTravExport") || (function() {
+      const style = document.createElement('style');
+      style.type = 'text/css';
+      style.id = "GM_addStyleByTravExport";
+      document.head.appendChild(style);
+      return style;
+    })();
+    const sheet = style.sheet;
+    sheet.insertRule(css, (sheet.rules || sheet.cssRules || []).length);
   };
 
-  function createAnkiNote(card) {
-    var audio_fields = [];
-    var fields = {};
-    var tags = card['tags'];
-    var modelName = "";
-    var noteTag = "";
-    var notes = "";
-    var pictures = [];
+  GM_addStyle(".dropbtn { color: black; padding: 16px; font-size: 16px; border: none; cursor: pointer; }");
+  GM_addStyle(".dropbtn:hover { background-color: #ddd; }");
+  GM_addStyle(".dropdown { float: right; position: relative; display: inline-block; }");
+  GM_addStyle(".dropdown-content { display: none; position: absolute; background-color: #f1f1f1; min-width: 200px; overflow: auto; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); right: 0; z-index: 1; }");
+  GM_addStyle(".dropdown-content a { color: black; padding: 12px 16px; text-decoration: none; display: block; cursor: pointer; }");
+  GM_addStyle(".dropdown a:hover {background-color: #ddd; }");
+  GM_addStyle(".show {display: block;}");
 
-    if (card["type"] == "sentence") {
-      notes = `CHARACTERS: <br/>
-${card["characters"].join("<br/>")}
+  var ANKI = {
+    DEFAULTS: {
+      MOVIE: {DECK: "Mining", MODEL: "CHARACTER NOTE", TAG: "4-MAKE-A-MOVIE"},
+      PROP: {DECK: "Mining", MODEL: "PROP REVIEW", TAG: "1-PROPS"},
+      SET: {DECK: "Mining", MODEL: "SET REVIEW", TAG: "3-SETS"},
+      ACTOR: {DECK: "Mining", MODEL: "ACTOR REVIEW", TAG: "2-ACTORS"},
+      WORDCONNECTION: {DECK: "Mining", MODEL: "WORD CONNECTION REVIEW", TAG: "5-UNLOCKED-VOCAB"},
+      CONVOCON: {DECK: "Conversation Connectors", MODEL: "MB CONVOCON REVIEW", TAG: "MB_CONVO_CON"},
+      SENTENCE: {DECK: "Mining Sentences", MODEL: "MB Cloze", TAG: "SENTENCE"}
+    },
+
+    options: {
+  	"allowDuplicate": true,
+	"duplicateScope": "deck",
+    	"duplicateScopeOptions": {
+    	  "deckName": "Default",
+    	  "checkChildren": false,
+          "checkAllModels": false
+  	}
+    },
+
+    generateUID: function() {
+        var firstPart = (Math.random() * 466566) | 0;
+        var secondPart = (Math.random() * 466566) | 0;
+        firstPart = ("00000" + firstPart.toString(36)).slice(-5);
+        secondPart = ("00000" + secondPart.toString(36)).slice(-5);
+        return firstPart + secondPart;
+    },
+    
+    createSentence: function(card) {
+      var targetDeck = unsafeWindow.localStorage.getItem("sentenceDeck") || this.DEFAULTS.SENTENCE.DECK;
+      var pictures = [];
+      var audio_fields = [];
+      var modelName = ANKI.DEFAULTS.SENTENCE.MODEL;
+      var noteTag = "SENTENCE";
+      var tags = card['tags'];
+      tags.push(noteTag);
+
+      var notes = `Usages: <br/>
+${card["usage"].join("<br/>")}<br/><br/>
+Characters: <br/>
+${card["characters"].join("<br/>")}<br/>
+Personal Notes: <br/>
+${card["notes"].join("<br/>")}
 `;
-			fields = {
-  	    "Sentence": card["hanzi"],
-    	  "English": card["keyword"],
-      	"Notes": notes
-    	}
-      modelName = "MB Cloze";
-      noteTag = "SENTENCE";
-      if (card["word"]) {
-      	var cloze = card["word"].replace(card["characters"][0], `{{c1::${card["characters"][0]}}}`);
-      	fields["Sentence"] = fields["Sentence"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${cloze}</span>`);
+      var fields = {
+        "Sentence": card["hanzi"],
+        "English": card["keyword"],
+        "Notes": notes
       }
-			fields["Top-Down Words"] = `${card["top-down"].join("<br/>")}`;
+
+      if (card["word"]) {
+      	//var cloze = card["word"].replace(card["characters"][0], `{{c1::${card["characters"][0]}}}`);
+        var cloze = card["word"].replace(card["characters"][0], `${card["characters"][0]}`); // fake cloze
+      	fields["Sentence"] = fields["Sentence"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${cloze}</span>`);
+        fields["Sentence"] += "{{c1::}}";
+      }
+      fields["Top-Down Words"] = `${card["top-down"].join("<br/>")}`;
       card["audio"].forEach(a => {
         var split_fields = a.split("/");
         var filename = split_fields[split_fields.length-1];
         if (filename.length > 36) {
-          filename = tags[0] + "-" + generateUID(filename)+'.mp3';
+          filename = tags[0] + "-" + this.generateUID(filename)+'.mp3';
         }
         audio_fields.push({
           "url": a,
@@ -78,30 +117,171 @@ ${card["characters"].join("<br/>")}
         })
       });
 
-    }
+      var params = {
+        "note": {
+            "deckName": targetDeck,
+            "modelName": modelName,
+            "fields": fields,
+            "options": this.options,
+            "tags": tags,
+            "audio": audio_fields,
+            "picture": pictures
+        }
+      }
+      return params;
+    },
+    
+    createProp: function(card) {
+      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || ANKI.DEFAULTS.PROP.DECK;
+      var tags = card['tags'];
+      var prop = `${card["notes"].join("<br/>")}`;
+      var fields = {
+        COMPONENT: card["component"] || "empty",
+        PROP: prop || "()",
+        "SOURCE LESSON": card["source lesson"] || "",
+      };
+      var modelName = ANKI.DEFAULTS.PROP.MODEL;
+      var noteTag = "1-PROPS";
+      tags.push(noteTag);
 
+      var params = {
+        "note": {
+            "deckName": targetDeck,
+            "modelName": modelName,
+            "fields": fields,
+            "options": this.options,
+            "tags": tags,
+            "audio": [],
+            "picture": []
+        }
+      }
+      return params;
+    },
+    
+    createSet: function(card) {
+      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || ANKI.DEFAULTS.SET.DECK;
+      var tags = card['tags'];
+      var set = `${card["notes"].join("<br/>")}`;
+      var fields = {
+        "PINYIN FINAL": card["pinyinfinal"],
+        SET: set || "()",
+        "SOURCE LESSON": card["source lesson"] || "",
+      };
+      var modelName = ANKI.DEFAULTS.SET.MODEL;
+      var noteTag = "3-SETS";
+      tags.push(noteTag);
 
-    if (card["type"] == "movie review") {
- 	 		notes = `ACTOR: ${card["actor"]}
-<br/>
-SET: ${card["set"]}
-<br/>
-PROPS: <br/>
-${card["props"].join("<br/>")}
-<br/>
-<br/>
+      var params = {
+        "note": {
+            "deckName": targetDeck,
+            "modelName": modelName,
+            "fields": fields,
+            "options": this.options,
+            "tags": tags,
+            "audio": [],
+            "picture": []
+        }
+      }
+      return params;
+    },
+    
+    createActor: function(card) {
+      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || ANKI.DEFAULTS.ACTOR.DECK;
+      var tags = card['tags'];
+      var actor = `${card["notes"].join("<br/>")}`;
+      var fields = {
+        "PINYIN INITIAL": card["pinyininitial"],
+        ACTOR: actor || "()",
+        "SOURCE LESSON": card["source lesson"] || "",
+      };
+      var modelName = ANKI.DEFAULTS.ACTOR.MODEL;
+      var noteTag = "2-ACTORS";
+      tags.push(noteTag);
+
+      var params = {
+        "note": {
+            "deckName": targetDeck,
+            "modelName": modelName,
+            "fields": fields,
+            "options": this.options,
+            "tags": tags,
+            "audio": [],
+            "picture": []
+        }
+      }
+      return params;
+    },
+    
+    createWordConnection: function(card) {
+      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || ANKI.DEFAULTS.WORDCONNECTION.DECK;
+      var tags = card['tags'];
+      var livedexperience = `${card["notes"].join("<br/>")}`;
+      var audio_fields = [];
+      var fields = {
+        WORD: card["hanzi"],
+        PINYIN: card["pinyin"],
+        MEANING: card["keyword"],
+        IMAGE: "()",
+        "LIVED EXPERIENCE": livedexperience,
+        "SOURCE LESSON": card["source lesson"] || "",
+  	  };
+      var modelName = ANKI.DEFAULTS.WORDCONNECTION.MODEL;
+      var noteTag = ANKI.DEFAULTS.WORDCONNECTION.TAG;
+      tags.push(noteTag);
+
+      card["audio"].forEach(a => {
+        var split_fields = a.split("/");
+        var filename = split_fields[split_fields.length-1];
+        audio_fields.push({
+          "url": a,
+          "filename": filename,
+          "skipHash": "",
+          "fields": ["AUDIO"]
+        })
+      });
+      var params = {
+        "note": {
+            "deckName": targetDeck,
+            "modelName": modelName,
+            "fields": fields,
+            "options": this.options,
+            "tags": tags,
+            "audio": audio_fields,
+            "picture": []
+        }
+      }
+      return params;
+    },
+
+    createCharacter: function(card) {
+      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || ANKI.DEFAULTS.MOVIE.DECK;
+      var modelName = ANKI.DEFAULTS.MOVIE.MODEL;
+      var noteTag = "4-MAKE-A-MOVIE";
+      var tags = card['tags'];
+      var audio_fields = [];
+      var pictures = [];
+      tags.push(noteTag);
+
+      var notes = `
 ${card["notes"].join("<br/>")}
 `;
-      fields = {
+
+      var fields = {
         "HANZI": card["hanzi"],
         "KEYWORD": card["keyword"],
         "PINYIN": card["pinyin"],
-        "NOTES": notes
+        "ACTOR": card["actor"],
+        "SET": card["set"],
+        "PROPS": `${card["props"].join("<br/>")}`,
+ //       "NOTES": notes,
+        "SOURCE LESSON": card["source lesson"],
       }
-      modelName = "MOVIE REVIEW";
-      noteTag = "4-MAKE-A-MOVIE";
+      if (card["sentence"]) {
+        fields["SENTENCE"] = card["sentence"];
+      }
+
       var image_url = `https://dragonmandarin.com/media/hanzi5-${card["hanzi"]}.gif`
-    	var image_filename = `hanzi5-${card["hanzi"]}.gif`;
+      var image_filename = `hanzi5-${card["hanzi"]}.gif`;
       pictures.push({
         "url": image_url,
         "filename": image_filename,
@@ -110,6 +290,17 @@ ${card["notes"].join("<br/>")}
           "STROKE ORDER"
         ]
       });
+
+      if (card["sentence_word_usage"]) {
+       	fields["SENTENCE_WORD"] = card["sentence_word_usage"].map(usage => usage.split("-")[1].trim()).join(", ");
+      }
+      
+      if (card["word"]) {
+        if (card["word_pinyin"]) {
+          fields["WORD_PINYIN"] = card["word_pinyin"];
+      	  fields["SENTENCE"] = fields["SENTENCE"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${card["word"]}</span>`);
+        }
+      }
 
       card["audio"].forEach(a => {
         var split_fields = a.split("/");
@@ -122,264 +313,602 @@ ${card["notes"].join("<br/>")}
         })
       });
 
-    }
-		if (modelName == "") {
-      console.log("malformed params, can not add card:", card);
-      return;
-    }
-    tags.push(noteTag);
-
-		var params = {
+      card["sentence_audio"].forEach(a => {
+        var split_fields = a.split("/");
+        var filename = split_fields[split_fields.length-1];
+        if (filename.length > 36) {
+          filename = tags[0] + "-" + this.generateUID(filename)+'.mp3';
+        }
+        audio_fields.push({
+          "url": a,
+          "filename": filename,
+          "skipHash": "",
+          "fields": ["SENTENCE_AUDIO"]
+        })
+      });
+      
+      var params = {
         "note": {
-            "deckName": "Mining",
+            "deckName": targetDeck,
             "modelName": modelName,
             "fields": fields,
-            "options": {
-                "allowDuplicate": true,
-                "duplicateScope": "deck",
-                "duplicateScopeOptions": {
-                    "deckName": "Default",
-                    "checkChildren": false,
-                    "checkAllModels": false
-                }
-            },
+            "options": this.options,
             "tags": tags,
             "audio": audio_fields,
             "picture": pictures
         }
-    };
+      }
+      return params;
 
-    console.log(card);
-    console.log(params);
+    },
     
-    anki_invoke('addNote', 6, params).then(result => {
-	    createSuccessIcon();
-    });
+    createConvoConnector: function(card) {
+      var targetDeck = unsafeWindow.localStorage.getItem("convoDeck") || "Conversation Connectors";
+      var modelName = "MB CONVOCON REVIEW";
+      var tags = card['tags'];
+      var noteTag = "MB_CONVO_CON";
+      var audio_fields = [];
+      tags.push(noteTag);
+
+      var notes = "";
+      var pictures = [];
+
+      var fields = {
+        PHRASE_CHINESE: card["chinesePhrase"],
+        PHRASE_ENG: card["englishPhrase"],
+        PINYIN: card["pinyin"],
+        NOTES: "",
+      };
+
+      card["audio"].forEach(a => {
+        var split_fields = a.split("/");
+        var filename = split_fields[split_fields.length-1];
+        if (filename.length > 36) {
+          filename = "convo_con-" + this.generateUID(filename)+'.mp3';
+        }
+        audio_fields.push({
+          "url": a,
+          "filename": filename,
+          "skipHash": "",
+          "fields": ["AUDIO"]
+        })
+      });
+
+      var params = {
+        "note": {
+            "deckName": targetDeck,
+            "modelName": modelName,
+            "fields": fields,
+            "options": this.options,
+            "tags": tags,
+            "audio": audio_fields,
+            "picture": pictures
+        }
+      }
+      return params;
+    },
+    
+    createAnkiNote: function(card) {
+      var note;
+      if (card["type"] == "convo_connector") {
+	note = this.createConvoConnectors(card);
+      }
+      else if (card["type"] == "sentence") {
+	note = this.createSentence(card);
+      }
+      else if (card["type"] == "movie review") {
+        note = this.createCharacter(card);
+      }
+      else if (card["type"] == "prop") {
+        note = this.createProp(card);
+      }
+      else if (card["type"] == "set") {
+        note = this.createSet(card);
+      }
+      else if (card["type"] == "actor") {
+        note = this.createActor(card);
+      }
+      else if (card["type"] == "wordconnection") {
+        note = this.createWordConnection(card);
+      } else {
+       	console.log("unknown card type, this will go bad");
+      }
+
+      if (note) {
+        console.log(card);
+    		console.log(note);
+    		return this.anki_invoke('addNote', 6, note).then(result => { UI.createSuccessIcon(); });
+      } else {
+        console.error("could not create note, type not recognized");
+      }
+    },
+
+    anki_invoke: function(action, version, params={}) {
+      return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.addEventListener('error', () => reject('failed to issue request'));
+          xhr.addEventListener('load', () => {
+              try {
+                  const response = JSON.parse(xhr.responseText);
+                  if (Object.getOwnPropertyNames(response).length != 2) {
+                      throw 'response has an unexpected number of fields';
+                  }
+                  if (!response.hasOwnProperty('error')) {
+                      throw 'response is missing required error field';
+                  }
+                  if (!response.hasOwnProperty('result')) {
+                      throw 'response is missing required result field';
+                  }
+                  if (response.error) {
+                      throw response.error;
+                  }
+                  resolve(response.result);
+              } catch (e) {
+                  reject(e);
+              }
+          });
+
+          xhr.open('POST', 'http://127.0.0.1:8765');
+          xhr.send(JSON.stringify({action, version, params}));
+      });
+    }
 
   };
-
-  function attachCardType(card, children) {
-    children.forEach(child => {
-      if (child.textContent.startsWith("Movie review")) {
-        card['type'] = 'movie review';
-        card['hanzi'] = child.textContent.split("Movie review:")[1].trim();
-      }
-      if (child.textContent.startsWith("Pick a prop")) {
-       	card['type'] = 'prop';
-        card['hanzi'] = child.textContent.split("Pick a prop for")[1].trim();
-      }
-      if (child.textContent.startsWith("Characters:")) {
-        card['type'] = 'sentence';
-      }
-    });
-  }
   
-	function generateUID() {
-  	  var firstPart = (Math.random() * 466566) | 0;
-    	var secondPart = (Math.random() * 466566) | 0;
-    	firstPart = ("00000" + firstPart.toString(36)).slice(-5);
-    	secondPart = ("00000" + secondPart.toString(36)).slice(-5);
-    	return firstPart + secondPart;
-	};
 
-  function parseTraverseCard() {
-    var htmlchildren = document.getElementsByClassName("ProseMirror")[0].children;
-    var children = [];
-		for (var child of htmlchildren) {
-      if (!child.textContent) { continue }
-      children.push(child);
-    }
+  
+  var Traverse = {
+    attachCardType: function(card, children) {
+      for (child of children) {
+        if (child.textContent.startsWith("Movie review")) {
+          card['type'] = 'movie review';
+          card['hanzi'] = child.textContent.split("Movie review:")[1].trim();
+          return;
+        }
+        if (child.textContent.startsWith("Pick a prop")) {
+          card['type'] = 'prop';
+          card['hanzi'] = child.textContent.split("Pick a prop for")[1].trim();
+          return;
+        }
+        if (child.textContent.startsWith("Pick a set for")) {
+          card['type'] = 'set';
+          return;
+        }
+        if (child.textContent.startsWith("Pick an actor for")) {
+          card['type'] = 'actor';
+          return;
+        }
+        if (child.textContent.startsWith("Word connection:")) {
+          card['type'] = 'wordconnection';
+          return;
+        }
+        if (child.textContent.startsWith("Characters:") || child.textContent.startsWith("Sentence")) {
+          card['type'] = 'sentence';
+          return;
+        }
+        if (child.textContent.startsWith("Add to reviews")) {
+          card["type"] = "convo_connector";
+          return;
+        }
+        if (child.textContent.indexOf("Phrase #") >= 0) {
+          card["type"] = "MSLK";
+          return;
+        }
+      }
+    },
 
-    var card = {
-      'type': null,
-      'hanzi': null,
-      'keyword': null,
-      'pinyin': null,
-      'audio': [],
-      'actor': null,
-      'set': null,
-      'props': [],
-      'notes': [],
-      'characters': [],
-      'tags': [],
-      'top-down': [],
-      'word': "",
-    };
+    parseConvoConnector: function(children) {
+      var card = {
+        type: "convo_connector",
+        englishPhrase: "",
+        chinesePhrase: "",
+        pinyin: "",
+        audio: [],
+        tags: [],
+        notes: [],
+      };
+      for (var idx in children) {
+        idx = parseInt(idx);
+        var child = children[idx];
 
-    attachCardType(card, children);
-    if (!card['type']) {
-      console.log("could not identify card type, sorry");
-      return;
-    }
+        if (child.textContent.startsWith("English phrase:")) {
+          card["englishPhrase"] = children[idx+1].textContent.trim();
+        }
+        else if (child.textContent.startsWith("Chinese phrase:")) {
+          card["chinesePhrase"] = children[idx+1].textContent.trim();
+          card["pinyin"] = children[idx+2].textContent.replace("Your browser does not support the audio element.", "").trim();
+        }
+        else {
+          this.attachAudio(card, child);
+        }
+      }
+      console.log(card);
+      return card;
+    },
     
-    var document_level = document.getElementsByClassName("max-h-full")[0].textContent.match(/\d+/)[0];
-    var level_tag = "MBMLEVEL"+document_level;
-		card['tags'].push(level_tag);
+    parseMSLK: function(children) {
+      var card = {
+        type: "MSLK",
+        englishPhrase: "",
+        chinesePhrase: "",
+        pinyin: "",
+        audio: [],
+        tags: ["MSLK"],
+        notes: [],
+      };
+      for (var idx in children) {
+        idx = parseInt(idx);
+        var child = children[idx];
 
-    if (card["type"] == "movie review") { card = parseMovie(card, children); }
-    if (card["type"] == "sentence") { card = parseSentence(card, children); }
-
-    if (["movie review", "sentence"].indexOf(card["type"]) >= 0) {
-      createAnkiNote(card);
-    }
-  };
-
-  function attachNotes(card) {
-    var edit_fields = document.getElementsByClassName("group/editor")
-    for (var elm of edit_fields) {
-      if (elm.textContent && elm.getAttribute('id').indexOf("NOTES") > 0) {
-        if (elm.textContent.length > 0) {
-        	card['notes'].push(elm.textContent);
+        if (child.textContent.startsWith("English")) {
+          card["englishPhrase"] = children[idx+1].textContent.replace("Your browser does not support the audio element.", "").trim();
         }
-      }
-    }
-  }
-  
-  function attachAudio(card, child) {
-    var audio_elms = child.getElementsByTagName('audio');
-    for (var elm of audio_elms) {
-      if (!elm.textContent) { continue; }
-      card['audio'].push(elm.getAttribute('src'));
-    }
-  }
-
-  function parseSentence(card, children) {
-    for (var idx in children) {
-      idx = parseInt(idx);
-      var child = children[idx];
-      if (child.tagName == "P" && child.textContent.length > 3 && child.children.length == 0) {
-        if (child.textContent.indexOf("用法") >= 0) {
-          ;
-        } else {
-          card['top-down'].push(child.textContent);
-        }
-      }
-      if (child.tagName == "H2") {
-        card["hanzi"] = child.textContent;
-        card["keyword"] = children[idx+1].textContent; // the next element is usually cloze keyword
-        var mark_elm = child.getElementsByTagName("mark")[0];
-        if (mark_elm != undefined) {
-        	card["word"] = mark_elm.textContent;
-        }
-      }
-      else if (child.textContent.startsWith("Characters:")) {
-        for (var propelm of child.children) {
-          if (!propelm.textContent || propelm.textContent == "Characters:") { continue }
-          var textContent = propelm.textContent.trim();
-          if (textContent == "Untitled") {
-            var splits = propelm.getElementsByTagName('a')[0].getAttribute("href").split("/");
-            textContent = splits[splits.length-1];
+        else if (child.textContent.startsWith("Chinese")) {
+          card["pinyin"] = children[idx+1].textContent.replace("Your browser does not support the audio element.", "").trim();
+          var phrase = children[idx+2].textContent.replace("Your browser does not support the audio element.", "").trim()
+          if (phrase.indexOf("Phrase #")) {
+            var phraseNum = phrase.split("Phrase #")[1].trim();
+            var phrase = phrase.split("Phrase #")[0].trim();
+            card["tags"].push(`Phrase#${phraseNum}`);
           }
-          card['characters'].push(textContent);
+          card["chinesePhrase"] = phrase;
+        }
+        else if (child.textContent.startsWith("Phrase #")) {
+          var phraseNum = phrase.split("Phrase #")[1].trim();
+          card["tags"].push(`Phrase#${phraseNum}`);
+        }
+        else {
+          this.attachAudio(card, child);
         }
       }
-      else {
-        attachAudio(card, child);
+      console.log("MSLK", card);
+      return card;
+    },
+    
+    parseTraverseCard: function() {
+      var htmlchildren = document.getElementsByClassName("ProseMirror")[0].children;
+      var children = [];
+      for (var child of htmlchildren) {
+        if (!child.textContent) { continue }
+        children.push(child);
       }
-    }
-    attachNotes(card);
-    return card;
-  }
-  
-  function parseMovie(card, children) {
-    for (var idx in children) {
-      idx = parseInt(idx);
-      var child = children[idx];
 
-      if (child.textContent.startsWith("Keyword")) { card["keyword"] = children[idx+1].textContent; }
-      else if (child.textContent.startsWith("Pinyin")) { card["pinyin"] = children[idx+1].textContent; }
-      else if (child.textContent.startsWith("Actor")) { card['actor'] = children[idx].textContent.split("Actor:")[1].trim(); }
-      else if (child.textContent.startsWith("Set")) { card['set'] = children[idx].textContent.split("Set:")[1].trim(); }
-      else if (child.textContent.startsWith("Prop(s)")) {
-        card['props'].push(child.textContent.split("Prop(s):")[1].trim());
-        var remaining = children.slice(idx+1);
-        remaining.forEach(propelm => {
-          card['props'].push(propelm.textContent.trim());
-        });
-      }
-      else {
-        attachAudio(card, child);
-      }
-    }
-    attachNotes(card);
-    return card;
-  }
+      var card = {
+        'type': null,
+        'hanzi': null,
+        'keyword': null,
+        'pinyin': null,
+        'audio': [],
+        'sentence_audio': [],  // compat. Used in editor mode
+        'sentence': null,      // compat. Used in editor mode
+        'sentence_word': null,
+        'actor': null,
+        'set': null,
+        'final': null,
+        'props': [],
+        'notes': [],
+        'usage': [],
+        'characters': [],
+        'source lesson': null,
+        'component': null,     // for prop cards
+        'tags': [],
+        'top-down': [],
+        'word': "",
+      };
 
-  function createSuccessIcon() {
-//     `
-//     <div style="margin-right: 10px;">
-//     	<svg style="position: relative; top: calc(50% - 6px); left: calc(50% - 8px);" width="17" height="13" viewBox="0 0 17 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-//       	<path d="M1 7.6L5.28571 12L16 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
-//     	</svg>
-//     </div>
-//     `
-//     var div = document.createElement('div');
-//     div.setAttribute("style", "margin-right:10px;");
+      this.attachCardType(card, children);
+      if (!card['type']) {
+        console.log("could not identify card type, sorry");
+        return;
+      }
+
+      try {
+        var document_level = document.getElementsByClassName("max-h-full")[0].textContent.match(/\d+/)[0];
+        var level_tag = "MBMLEVEL"+document_level;
+        card['tags'].push(level_tag);
+      } catch { ; };
+
+      if (card["type"] == "movie review") { card = this.parseMovie(card, children); }
+      if (card["type"] == "sentence") { card = this.parseSentence(card, children); }
+      if (card["type"] == "prop") { card = this.parseProp(card, children); }
+      if (card["type"] == "set") { card = this.parseSet(card, children); }
+      if (card["type"] == "actor") { card = this.parseActor(card, children); }
+      if (card["type"] == "wordconnection") { card = this.parseWordConnection(card, children); }
+      if (card["type"] == "convo_connector") { card = this.parseConvoConnector(children); }
+      if (card["type"] == "MSLK") { card = this.parseMSLK(children); }
+      return card
+    },
+
+    parseTraverseAndAdd: function() {
+      var card = Traverse.parseTraverseCard();
+      if (["movie review", "sentence", "prop", "set", "actor", "wordconnection", "convo_connector"].indexOf(card["type"]) >= 0) {
+        ANKI.createAnkiNote(card);
+      }
+    },
+
+    attachNotes: function(card) {
+      var edit_fields = document.getElementsByClassName("group/editor")
+      for (var elm of edit_fields) {
+        if (elm.textContent && elm.getAttribute('id').toLowerCase().indexOf("notes") > 0) {
+          var textValue = elm.textContent;
+          // detect a href
+          var a_href = elm.getElementsByTagName("a");
+          if (a_href.length > 0) {
+            a_href = a_href[0];
+          	if (a_href.textContent == "Source Video Lesson") {
+	            card["source lesson"] = `<a href="${a_href.getAttribute('href')}">source lesson</a>`;
+	            textValue = textValue.replace('Source Video Lesson', '');
+  	        }
+          }
+          if (textValue.length > 0) {
+            card['notes'].push(textValue);
+          }
+        }
+      }
+    },
+
+    attachAudio: function(card, child) {
+      var audio_elms = child.getElementsByTagName('audio');
+      for (var elm of audio_elms) {
+        if (!elm.textContent) { continue; }
+        card['audio'].push(elm.getAttribute('src'));
+      }
+    },
+
+    parseSentence: function(card, children) {
+      for (var idx in children) {
+        var idx = parseInt(idx);
+        var child = children[idx];
+        if (child.tagName == "P" && child.textContent.length > 3 && child.children.length == 0) {
+          if (child.textContent.indexOf("用法") >= 0) {
+            card["usage"].push(child.textContent);
+          } else {
+            card['top-down'].push(child.textContent);
+          }
+        }
+        if (child.tagName == "H2") {
+          card["hanzi"] = child.textContent;
+          card["keyword"] = children[idx+1].textContent; // the next element is usually cloze keyword
+          var mark_elm = child.getElementsByTagName("mark")[0];
+          if (mark_elm != undefined) {
+            card["word"] = mark_elm.textContent;
+          }
+        }
+        else if (child.textContent.startsWith("Characters:")) {
+          for (var propelm of child.children) {
+            if (!propelm.textContent || propelm.textContent == "Characters:") { continue }
+            var textContent = propelm.textContent.trim();
+            if (textContent == "Untitled") {
+              var splits = propelm.getElementsByTagName('a')[0].getAttribute("href").split("/");
+              textContent = splits[splits.length-1];
+            }
+            card['characters'].push(textContent);
+          }
+        }
+        else {
+          this.attachAudio(card, child);
+        }
+      }
+      this.attachNotes(card);
+      return card;
+    },
+
+    parseProp: function(card, children) {
+      for (var child of children) {
+        if (child.textContent.startsWith("Pick a prop for")) { card["component"] = child.textContent.split("Pick a prop for")[1].trim(); }
+      }
+      var edit_fields = document.getElementsByClassName("group/editor")
+      for (var elm of edit_fields) {
+        if (elm.textContent && elm.getAttribute('id').toLowerCase().indexOf("field-prop") > 0) {
+          if (elm.textContent.length > 0) {
+            card['notes'].push(elm.textContent);
+          }
+        }
+      }
+      return card;
+    },
+
+    parseSet: function(card, children) {
+      for (var child of children) {
+        if (child.textContent.startsWith("Pick a set for")) { card["pinyinfinal"] = child.textContent.split("Pick a set for")[1].trim(); }
+      }
+      var edit_fields = document.getElementsByClassName("group/editor")
+      for (var elm of edit_fields) {
+        if (elm.textContent && elm.getAttribute('id').toLowerCase().indexOf("field-set") > 0) {
+          if (elm.textContent.length > 0) {
+            card['notes'].push(elm.textContent);
+          }
+        }
+      }
+      return card;
+    },
+
+    parseActor: function(card, children) {
+      for (var child of children) {
+        if (child.textContent.startsWith("Pick an actor for")) { card["pinyininitial"] = child.textContent.split("Pick an actor for")[1].trim(); }
+      }
+      var edit_fields = document.getElementsByClassName("group/editor")
+      for (var elm of edit_fields) {
+        if (elm.textContent && elm.getAttribute('id').toLowerCase().indexOf("field-actor") > 0) {
+          if (elm.textContent.length > 0) {
+            card['notes'].push(elm.textContent);
+          }
+        }
+      }
+      return card;
+    },
     
-//     var svg = document.createElement("svg");
-//     svg.setAttribute("style", "position: relative; top: calc(50% - 6px); left: calc(50% - 8px);");
-//     svg.setAttribute("width", "17");
-//     svg.setAttribute("height", "13");
-//     svg.setAttribute("viewBox", "0 0 17 13");
-//     svg.setAttribute("fill", "none");
-//     svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-//     div.appendChild(svg);
+    parseWordConnection: function(card, children) {
+      for (var idx in children) {
+        idx = parseInt(idx);
+        var child = children[idx];
+        
+        if (child.textContent.startsWith("Meaning")) { card["keyword"] = children[idx+1].textContent; }
+        else if (child.textContent.startsWith("Pinyin")) { card["pinyin"] = children[idx+1].textContent; }
+        else if (child.textContent.startsWith("Word connection:")) { card["hanzi"] = child.textContent.split("Word connection:")[1].trim(); }
+        else {
+          this.attachAudio(card, child);
+        }
+      }
+      var edit_fields = document.getElementsByClassName("group/editor")
+      for (var elm of edit_fields) {
+        if (elm.textContent && elm.getAttribute('id').toLowerCase().indexOf("field-lived") > 0) {
+          if (elm.textContent.length > 0) {
+            card['notes'].push(elm.textContent);
+          }
+        }
+      }
+      return card;
+    },
     
-//     var path = document.createElement("path");
-//     path.setAttribute("d", "M1 7.6L5.28571 12L16 1");
-//     path.setAttribute("stroke", "white");
-//     path.setAttribute("stroke-width", "2");
-//     path.setAttribute("stroke-linecap", "round");
-//     path.setAttribute("stroke-linejoin", "round");
-//     svg.appendChild(path);
-    
-//     var anchor = toolbar.getElementsByClassName('homescreen-button')[0].parentNode;
-    
-//     var button_like = document.createElement("button");
-//     button_like.setAttribute("class", "homescreen-button");
-//     button_like.setAttribute("id", "success-icon-yay");
-//     button_like.appendChild(div);
-//     anchor.appendChild(button_like);
-    var toolbar = document.getElementsByClassName('MuiToolbar-regular')[0];
-    var add_button = document.createElement('img');
-    add_button.textContent = '';
-    add_button.setAttribute("id", "success-icon-yay");
-    add_button.setAttribute("style", "padding-right: 0px; padding-left: 0px; position: absolute; right: 0px; top: 58px; max-width: 58px;");
-    add_button.setAttribute("src", ok_icon);
-    var anchor = toolbar.getElementsByClassName('homescreen-button')[0].parentNode;
-    anchor.appendChild(add_button);
-    
-    function removeSuccess() {
-      document.getElementById("success-icon-yay").remove();
-    };
-    window.setTimeout(removeSuccess, 2500);
+    parseMovie: function(card, children) {
+      for (var idx in children) {
+        idx = parseInt(idx);
+        var child = children[idx];
+
+        if (child.textContent.startsWith("Keyword")) { card["keyword"] = children[idx+1].textContent; }
+        else if (child.textContent.startsWith("Pinyin")) { card["pinyin"] = children[idx+1].textContent; }
+        else if (child.textContent.startsWith("Actor")) { card['actor'] = children[idx].textContent.split("Actor:")[1].trim(); }
+        else if (child.textContent.startsWith("Set")) { card['set'] = children[idx].textContent.split("Set:")[1].trim(); }
+        else if (child.textContent.startsWith("Prop(s)") || child.textContent.startsWith("Props")) {
+          var remaining = children.slice(idx);
+          remaining.forEach(propelm => {
+            var propValue = propelm.textContent.replace('Prop(s):', '').replace("Props:", "").trim();
+            if (propelm.getElementsByTagName('a').length == 0) {
+              ;
+            } else {
+              var propHtml = propelm.getElementsByTagName('a')[0].getAttribute('href');
+              card['props'].push(`${propValue}`); // (<a href="https://traverse.link${propHtml}">Traverse Link</a>)`);
+            }
+          });
+        }
+        else {
+          this.attachAudio(card, child);
+        }
+      }
+      this.attachNotes(card);
+      return card;
+    },
+
   };
-  
-  function createDownloadButton() {
-    var toolbars = document.getElementsByClassName('MuiToolbar-regular');
-    if (toolbars.length == 0) {
-      console.log("No toolbar found, can not attach download button");
-      return
+
+  var UI = {
+    createSuccessIcon: function() {
+      var toolbar = document.getElementsByClassName('MuiToolbar-regular')[0];
+      var add_button = document.createElement('button');
+      add_button.textContent = 'Added!';
+      add_button.setAttribute("id", "success-icon-yay");
+      add_button.setAttribute("class", "homescreen-button learn-mode-button-container add-to-reviews-button-container");
+      add_button.setAttribute("style", "padding-right: 5px; padding-left: 5px; position: absolute; right: 0px; top: 58px; max-width: 100px; cursor: default;");
+      var anchor = toolbar.getElementsByClassName('homescreen-button')[0].parentNode;
+      anchor.appendChild(add_button);
+
+      function removeSuccess() {
+        document.getElementById("success-icon-yay").remove();
+      };
+      window.setTimeout(removeSuccess, 1200);
+    },
+
+    setDeckName: function(setting, def) {
+      var miningDeck = unsafeWindow.localStorage.getItem(setting);
+      if (!miningDeck) {
+        miningDeck = def;
+      }
+      var deck = prompt("Enter deck name (make sure it exists!)", miningDeck);
+      if (!deck) {
+        deck = miningDeck;
+      }
+      unsafeWindow.localStorage.setItem(setting, deck);
+    },
+
+    myDropdown: function() {
+      var dropdown = document.getElementById("myDropdown");
+      dropdown.classList.toggle('show');
+    },
+
+    createMenu: function() {
+      document.addEventListener('click', (event) => {
+        if (!event.target.matches('.dropbtn')) {
+          var dropdowns = document.getElementsByClassName("dropdown-content");
+          for (var i = 0; i < dropdowns.length; i++) {
+            var openDropdown = dropdowns[i];
+            if (openDropdown.classList.contains('show')) {
+              openDropdown.classList.remove('show');
+            }
+          }
+        }
+      });
+
+      var outer_div = document.createElement('div');
+      outer_div.classList.toggle("dropdown");
+      var button = document.createElement('button');
+      button.textContent = 'T2A';
+      button.classList.toggle('homescreen-button');
+      button.classList.toggle('dropbtn');
+      button.setAttribute('title', 'Traverse 2 Anki Settings');
+      button.addEventListener('click', this.myDropdown, false);
+      outer_div.appendChild(button);
+
+      var inner_div = document.createElement('div');
+      inner_div.id = 'myDropdown';
+      inner_div.classList.toggle("dropdown-content");
+      outer_div.appendChild(inner_div);
+
+      var scrape_card = document.createElement('a');
+      scrape_card.setAttribute('title', 'Set Character Deck');
+      scrape_card.textContent = 'Character Deck Name';
+      scrape_card.addEventListener('click', () => { UI.setDeckName("miningDeck", ANKI.DEFAULTS.MOVIE.DECK);}, false);
+      inner_div.appendChild(scrape_card);
+
+      var st = document.createElement('a');
+      st.setAttribute('title', 'Set Sentence Deck');
+      st.textContent = 'Sentence Deck Name';
+      st.addEventListener('click', function() { UI.setDeckName("sentenceDeck", ANKI.DEFAULTS.SENTENCE.DECK);}, false);
+      inner_div.appendChild(st);
+
+      var toolbars = document.getElementsByClassName('MuiToolbar-regular');
+      if (toolbars.length > 0) {
+        toolbar = toolbars[0];
+        var anchor = toolbar.getElementsByClassName('homescreen-button')[0].parentNode;
+        anchor.appendChild(outer_div);
+        console.debug('download button created');
+      } else {
+        console.debug('MuiToolbar-regular not found, probably not on relevant page');
+      }
+    },
+
+    createDownloadButton: function() {
+      var toolbars = document.getElementsByClassName('MuiToolbar-regular');
+      if (toolbars.length == 0) {
+        console.log("No toolbar found, can not attach download button");
+        return
+      }
+      toolbar = toolbars[0];
+
+      var reveal_surface = document.getElementsByClassName('reveal-surface')[0];
+
+      var add_button = document.createElement('button');
+      add_button.textContent = 'Anki++';
+      add_button.setAttribute('class', 'homescreen-button cue-button review-due-button onboarding-review-due button-glow');
+      add_button.setAttribute('title', 'Add open card to Anki');
+      add_button.addEventListener('click', Traverse.parseTraverseAndAdd, false);
+
+      var anchor = toolbar.getElementsByClassName('MuiButtonBase-root MuiIconButton-root MuiIconButton-colorInherit')[0].parentNode; // homescreen-button')[0].parentNode;
+      anchor.appendChild(add_button);
+      console.log('download button created');
     }
-    var toolbar = toolbars[0];
-    var add_button = document.createElement('button');
-    add_button.textContent = 'Anki++';
-    add_button.classList.toggle('homescreen-button');
-    add_button.setAttribute('title', 'Add open card to Anki');
-    add_button.addEventListener('click', parseTraverseCard, false);
-	
-    var anchor = toolbar.getElementsByClassName('MuiButtonBase-root MuiIconButton-root MuiIconButton-colorInherit')[0].parentNode; // homescreen-button')[0].parentNode;
-    anchor.appendChild(add_button);
-    console.log('download button created');
+
   };
+
 
   unsafeWindow.we_are_there = false;
   function areWeThereYet() {
     if (document.location.href.indexOf("/Mandarin_Blueprint/") > 0) {
       if (!unsafeWindow.we_are_there) { 
-        createDownloadButton();
+        UI.createDownloadButton();
       	console.debug("yay");
       	unsafeWindow.we_are_there = true;
+        UI.createMenu();
       }
     } else {
       unsafeWindow.we_are_there = false;
