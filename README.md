@@ -46,6 +46,13 @@ You must have:
 
 Exported notes are unsuspended by default, suspend them manually if you don't want to review them just yet.
 
+## Supported note types
+
+T2A can extract:
+
+- Every note type from the main MB course
+- MSLK
+- TPV soon'ish? who knows!
 
 ## Work Flow
 
