@@ -84,3 +84,8 @@ except as follows:
 
 
 The developer(s) of this tool can not be held liable for any use or misuse of this tool.
+
+
+# But Why All This?!
+
+Traverse bad, Anki good.
