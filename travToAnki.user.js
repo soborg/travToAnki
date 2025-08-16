@@ -768,7 +768,14 @@ ${card["notes"].join("<br/>")}
 
         if (child.textContent.startsWith("Keyword")) { card["keyword"] = children[idx+1].textContent; }
         else if (child.textContent.startsWith("Pinyin")) { card["pinyin"] = children[idx+1].textContent; }
-        else if (child.textContent.startsWith("Actor")) { card['actor'] = children[idx].textContent.split("Actor:")[1].trim(); }
+        else if (child.textContent.startsWith("Actor")) {
+          if (child.textContent.startsWith("Actors:")) {
+            card['actor'] = children[idx].textContent.split("Actors:")[1].trim();
+          }
+          else {
+          	card['actor'] = children[idx].textContent.split("Actor:")[1].trim();
+          }
+        }
         else if (child.textContent.startsWith("Set")) { card['set'] = children[idx].textContent.split("Set:")[1].trim(); }
         else if (child.textContent.startsWith("Prop(s)") || child.textContent.startsWith("Props")) {
           var remaining = children.slice(idx);
