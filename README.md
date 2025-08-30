@@ -8,8 +8,7 @@ You must have:
 * GreaseMonkey extension for Firefox, TamperMonkey extension for Chrome/Chromium/Edge
 * A user account on Traverse
 * Anki with AnkiConnect installed (see this page for installation: https://foosoft.net/projects/anki-connect/)
-* You must have the deck types called `CHARACTER NOTE` (with these fields: `HANZI`, `STROKE ORDER`, `KEYWORD`, `PINYIN`, `ACTOR`, `SET`, `PROPS`, `NOTES`, `AUDIO`, `SOURCE LESSON`) and `MB CLOZE` (for sentences) available in Anki. If you've previously installed an MB Anki deck at least once, they should already be there. See the source of the script for details.
-* You must have a deck called `Mining`, or use the T2A menu option to configure.
+* You must have the deck types called `CHARACTER NOTE` (with these fields: `HANZI`, `STROKE ORDER`, `KEYWORD`, `PINYIN`, `ACTOR`, `SET`, `PROPS`, `NOTES`, `AUDIO`, `SOURCE LESSON`) and `MB CLOZE` (for sentences) available in Anki. You can use the `example.apkg` in this repository too bootstrap everything. It contains example notes for all required note types, it is recommended to suspend or remove the provided example notes.
 
 ### Special settings if you're using Chrome
 
