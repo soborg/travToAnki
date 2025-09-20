@@ -273,8 +273,8 @@ ${card["notes"].join("<br/>")}
         "ACTOR": card["actor"],
         "SET": card["set"],
         "PROPS": `${card["props"].join("<br/>")}`,
- //       "NOTES": notes,
-        "SOURCE LESSON": card["source lesson"],
+        "NOTES": notes,
+        "SOURCE LESSON": card["source lesson"] || "",
       }
       if (card["sentence"]) {
         fields["SENTENCE"] = card["sentence"];
@@ -391,10 +391,10 @@ ${card["notes"].join("<br/>")}
     createAnkiNote: function(card) {
       var note;
       if (card["type"] == "convo_connector") {
-	note = this.createConvoConnectors(card);
+	    note = this.createConvoConnector(card);
       }
       else if (card["type"] == "sentence") {
-	note = this.createSentence(card);
+	    note = this.createSentence(card);
       }
       else if (card["type"] == "movie review") {
         note = this.createCharacter(card);
