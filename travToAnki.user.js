@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Traverse Export To Anki
 // @description  Export open Traverse cards to Anki (character or sentence cards)
-// @version      2
+// @version      2.1
 // @grant        unsafeWindow
 // @grant        GM.setValue
 // @grant        GM.getValue
