@@ -63,6 +63,7 @@ T2A can extract:
 ## Work Flow (automation)
 
 * open a level.
+* click a card (this will be first card to be added)
 * click the T2A menu, click Automagic.
 * It will create all the cards for that level, beginning with the card you have open.
 
