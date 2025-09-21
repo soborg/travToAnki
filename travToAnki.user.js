@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Traverse Export To Anki
 // @description  Export open Traverse cards to Anki (character or sentence cards)
-// @version      2.2.1
+// @version      2.2.2
 // @grant        unsafeWindow
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -449,12 +449,12 @@ ${card["notes"].join("<br/>")}
     }
 
   };
-  
 
-  
   var Traverse = {
     attachCardType: function(card, children) {
-      for (child of children) {
+      for (var idx=0; idx<children.length; idx++) {
+        var child = children[idx];
+        console.log(idx, child);
         if (child.textContent.startsWith("Movie review")) {
           card['type'] = 'movie review';
           card['hanzi'] = child.textContent.split("Movie review:")[1].trim();
@@ -477,8 +477,13 @@ ${card["notes"].join("<br/>")}
           card['type'] = 'wordconnection';
           return;
         }
-        if (child.textContent.startsWith("Characters:") || child.textContent.startsWith("Sentence")) {
-          card['type'] = 'sentence';
+        if ((child.textContent.startsWith("Characters:") || child.textContent.startsWith("Sentence"))) {
+          var toplevel_h2 = child.parentNode.getElementsByTagName("H2");
+          if (toplevel_h2[0].getElementsByClassName("highlight-review").length == 1){
+            card['type'] = 'sentence';
+          } else {
+            card['type'] = 'sentence_production';
+          }            
           return;
         }
         if (child.textContent.startsWith("Add to reviews")) {
@@ -596,7 +601,7 @@ ${card["notes"].join("<br/>")}
         console.log("could not identify card type, sorry");
         return;
       }
-
+      console.debug(card);
       try {
         var document_level = document.getElementsByClassName("max-h-full")[0].textContent.match(/\d+/)[0];
         var level_tag = "MBMLEVEL"+document_level;
@@ -605,6 +610,7 @@ ${card["notes"].join("<br/>")}
 
       if (card["type"] == "movie review") { card = this.parseMovie(card, children); }
       if (card["type"] == "sentence") { card = this.parseSentence(card, children); }
+      if (card["type"] == "sentence_production") { card = this.parseSentenceProduction(card, children); }
       if (card["type"] == "prop") { card = this.parseProp(card, children); }
       if (card["type"] == "set") { card = this.parseSet(card, children); }
       if (card["type"] == "actor") { card = this.parseActor(card, children); }
@@ -622,15 +628,12 @@ ${card["notes"].join("<br/>")}
     },
 
     automateLevel: function() {
-      var delaySeconds = 13;
-
-      var elms = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"));
-      elms = elms.slice(1, elms.length);  // first element is the level header/item
-
+      var delaySeconds = 12;
       function doit(elms) {
         Traverse.parseTraverseAndAdd(); // collect open card
 
-        if (elms.length == 0 || elms[0].textContent.indexOf("CLICK HERE") >= 0 || elms[0].textContext.indexOf("LEVEL") >= 0 || elms[0].textContent.indexOf("句子") >= 0) {
+        console.log(elms[0]);
+        if (elms.length == 0 || elms[0].textContent.indexOf("CLICK HERE") >= 0 || elms[0].textContent.indexOf("LEVEL") >= 0 || elms[0].textContent.indexOf("句子") >= 0) {
           console.log("no more elements to add, level done?");
           UI.createFlash("Level/segment done!", 5000);
           return; // done!
@@ -648,7 +651,10 @@ ${card["notes"].join("<br/>")}
           elms);
       }
 
-      UI.createFlash("Beginning automation, hold on!", 2500);
+      var elms = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"));
+      elms = elms.slice(1, elms.length);  // first element is the level header/item
+
+      UI.createFlash("Beginning automation, hold on!", 4000);
       var selectedStyle = "(0, 148, 255)";
       var idx = 0;
       for (idx in elms) {
@@ -661,6 +667,7 @@ ${card["notes"].join("<br/>")}
         }
       }
       elms = elms.slice(idx, elms.length); // slice the elms to progress from current selected item
+      console.log(elms);
       elms[0].click(); // click the first real card element
       elms = elms.slice(1, elms.length);
       window.setTimeout(
@@ -708,16 +715,72 @@ ${card["notes"].join("<br/>")}
           if (child.textContent.indexOf("用法") >= 0) {
             card["usage"].push(child.textContent);
           } else {
-            card['top-down'].push(child.textContent);
+            if (child.textContent != card["keyword"]) { 
+              card['top-down'].push(child.textContent);
+            }
           }
         }
-        if (child.tagName == "H2") {
+
+        if (child.tagName == "H2" && idx == 0) {
           card["hanzi"] = child.textContent;
-          card["keyword"] = children[idx+1].textContent; // the next element is usually cloze keyword
+          if (child.parentNode.getElementsByTagName("H2")[1].textContent == "") { // there is no translation!
+            card["keyword"] = children[idx+1].textContent; // the next element is usually cloze keyword            
+          } else {
+            card["english"] = children[idx+1].textContent;
+            card["keyword"] = children[idx+2].textContent; // the next element is usually cloze keyword
+          }
           var mark_elm = child.getElementsByTagName("mark")[0];
           if (mark_elm != undefined) {
             card["word"] = mark_elm.textContent;
           }
+        }
+        
+        else if (child.textContent.startsWith("Characters:")) {
+          for (var propelm of child.children) {
+            if (!propelm.textContent || propelm.textContent == "Characters:") { continue }
+            var textContent = propelm.textContent.trim();
+            if (textContent == "Untitled") {
+              var splits = propelm.getElementsByTagName('a')[0].getAttribute("href").split("/");
+              textContent = splits[splits.length-1];
+            }
+            card['characters'].push(textContent);
+          }
+        }
+        else {
+          this.attachAudio(card, child);
+        }
+      }
+      this.attachNotes(card);
+      return card;
+    },
+    
+    parseSentenceProduction: function(card, children) {
+      for (var idx in children) {
+        var idx = parseInt(idx);
+        var child = children[idx];
+        if (child.tagName == "P" && child.textContent.length > 3 && child.children.length == 0) {
+          if (child.textContent.indexOf("用法") >= 0) {
+            card["usage"].push(child.textContent);
+          } else {
+            if (child.textContent != card["keyword"]) {
+              card['top-down'].push(child.textContent);
+            }
+          }
+        }
+
+        var mark_elm = child.getElementsByTagName("mark")[0];
+        if (mark_elm != undefined) {
+          card["word"] = mark_elm.textContent;
+        }
+
+        if (child.tagName == "H2" && idx == 0) {
+          card["english"] = child.textContent;
+          card["hanzi"] = children[idx+1].textContent;
+          card["keyword"] = children[idx+2].textContent; // the next element is usually cloze keyword
+//           var mark_elm = child.getElementsByTagName("mark")[0];
+//           if (mark_elm != undefined) {
+//             card["word"] = mark_elm.textContent;
+//           }
         }
         else if (child.textContent.startsWith("Characters:")) {
           for (var propelm of child.children) {
@@ -846,7 +909,6 @@ ${card["notes"].join("<br/>")}
       this.attachNotes(card);
       return card;
     },
-
   };
 
   var UI = {
@@ -925,7 +987,7 @@ ${card["notes"].join("<br/>")}
 
       var auto = document.createElement('a');
       auto.setAttribute('title', 'Create Anki cards from open level, starting with the selected node');
-      auto.textContent = 'Automagic (experimental)';
+      auto.textContent = 'Automagic';
       auto.addEventListener('click', Traverse.automateLevel, false);
       inner_div.appendChild(auto);
 
