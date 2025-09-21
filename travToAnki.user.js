@@ -1,32 +1,18 @@
 // ==UserScript==
 // @name         Traverse Export To Anki
 // @description  Export open Traverse cards to Anki (character or sentence cards)
-// @version      2.1
+// @version      2.2
 // @grant        unsafeWindow
 // @grant        GM.setValue
 // @grant        GM.getValue
 // @match        https://traverse.link/*
 // ==/UserScript==
 
-/*
-Supports:
-
-- Almost every kind of note type from Traverse (MB Traverses).
-
-
-Requirements:
- - Must have all the note types from the legacy anki decks (PROP REVIEW, SET REVIEW, ACTOR REVIEW, WORD CONNECTION REVIEW. MB CLOZE.
-
-Then add this note type (will be used for character notes, because it's better than the legacy note type):
- - `CHARACTER NOTE` (fields: `HANZI`, `STROKE ORDER`, `KEYWORD`, `PINYIN`, `ACTOR`, `SET`, `PROPS`, `NOTES`, `AUDIO`, `SOURCE LESSON`)
-
- Note type should be a `Basic (and reversed card)` if you want both recall and production cards.
-*/ 
-
-
 (function() {
+  var STAGED_CARD = {};
+
   function GM_addStyle(css) {
-      const style = document.getElementById("GM_addStyleByTravExport") || (function() {
+     const style = document.getElementById("GM_addStyleByTravExport") || (function() {
       const style = document.createElement('style');
       style.type = 'text/css';
       style.id = "GM_addStyleByTravExport";
@@ -45,9 +31,18 @@ Then add this note type (will be used for character notes, because it's better t
   GM_addStyle(".dropdown a:hover {background-color: #ddd; }");
   GM_addStyle(".show {display: block;}");
 
+  function createElement(elmtype, elmid, elmclass, elmstyle, elmtext) {
+    var elm = document.createElement(elmtype);
+    if (elmid) { elm.setAttribute("id", elmid); }
+    elm.setAttribute("class", elmclass);
+    if (elmstyle) { elm.setAttribute("style", elmstyle); }
+    if (elmtext) { elm.textContent = elmtext; }
+    return elm
+  };
+
   var ANKI = {
     DEFAULTS: {
-      MOVIE: {DECK: "Mining", MODEL: "CHARACTER NOTE", TAG: "4-MAKE-A-MOVIE"},
+      MOVIE: {DECK: "Mining", MODEL: "Character Note", TAG: "4-MAKE-A-MOVIE"},
       PROP: {DECK: "Mining", MODEL: "PROP REVIEW", TAG: "1-PROPS"},
       SET: {DECK: "Mining", MODEL: "SET REVIEW", TAG: "3-SETS"},
       ACTOR: {DECK: "Mining", MODEL: "ACTOR REVIEW", TAG: "2-ACTORS"},
@@ -57,13 +52,13 @@ Then add this note type (will be used for character notes, because it's better t
     },
 
     options: {
-  	"allowDuplicate": true,
-	"duplicateScope": "deck",
-    	"duplicateScopeOptions": {
-    	  "deckName": "Default",
-    	  "checkChildren": false,
-          "checkAllModels": false
-  	}
+      "allowDuplicate": true,
+      "duplicateScope": "deck",
+      "duplicateScopeOptions": {
+        "deckName": "Default",
+        "checkChildren": false,
+        "checkAllModels": false
+      }
     },
 
     generateUID: function() {
@@ -97,9 +92,9 @@ ${card["notes"].join("<br/>")}
       }
 
       if (card["word"]) {
-      	//var cloze = card["word"].replace(card["characters"][0], `{{c1::${card["characters"][0]}}}`);
+        //var cloze = card["word"].replace(card["characters"][0], `{{c1::${card["characters"][0]}}}`);
         var cloze = card["word"].replace(card["characters"][0], `${card["characters"][0]}`); // fake cloze
-      	fields["Sentence"] = fields["Sentence"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${cloze}</span>`);
+        fields["Sentence"] = fields["Sentence"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${cloze}</span>`);
         fields["Sentence"] += "{{c1::}}";
       }
       fields["Top-Down Words"] = `${card["top-down"].join("<br/>")}`;
@@ -224,7 +219,7 @@ ${card["notes"].join("<br/>")}
         IMAGE: "()",
         "LIVED EXPERIENCE": livedexperience,
         "SOURCE LESSON": card["source lesson"] || "",
-  	  };
+      };
       var modelName = ANKI.DEFAULTS.WORDCONNECTION.MODEL;
       var noteTag = ANKI.DEFAULTS.WORDCONNECTION.TAG;
       tags.push(noteTag);
@@ -292,13 +287,13 @@ ${card["notes"].join("<br/>")}
       });
 
       if (card["sentence_word_usage"]) {
-       	fields["SENTENCE_WORD"] = card["sentence_word_usage"].map(usage => usage.split("-")[1].trim()).join(", ");
+        fields["SENTENCE_WORD"] = card["sentence_word_usage"].map(usage => usage.split("-")[1].trim()).join(", ");
       }
       
       if (card["word"]) {
         if (card["word_pinyin"]) {
           fields["WORD_PINYIN"] = card["word_pinyin"];
-      	  fields["SENTENCE"] = fields["SENTENCE"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${card["word"]}</span>`);
+          fields["SENTENCE"] = fields["SENTENCE"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${card["word"]}</span>`);
         }
       }
 
@@ -391,10 +386,10 @@ ${card["notes"].join("<br/>")}
     createAnkiNote: function(card) {
       var note;
       if (card["type"] == "convo_connector") {
-	    note = this.createConvoConnector(card);
+        note = this.createConvoConnector(card);
       }
       else if (card["type"] == "sentence") {
-	    note = this.createSentence(card);
+        note = this.createSentence(card);
       }
       else if (card["type"] == "movie review") {
         note = this.createCharacter(card);
@@ -411,13 +406,13 @@ ${card["notes"].join("<br/>")}
       else if (card["type"] == "wordconnection") {
         note = this.createWordConnection(card);
       } else {
-       	console.log("unknown card type, this will go bad");
+        console.log("unknown card type, this will go bad");
       }
 
       if (note) {
         console.log(card);
-    		console.log(note);
-    		return this.anki_invoke('addNote', 6, note).then(result => { UI.createSuccessIcon(); });
+        console.log(note);
+        return this.anki_invoke('addNote', 6, note).then(result => { UI.createFlash("Added!"); });
       } else {
         console.error("could not create note, type not recognized");
       }
@@ -478,7 +473,7 @@ ${card["notes"].join("<br/>")}
           card['type'] = 'actor';
           return;
         }
-        if (child.textContent.startsWith("Word connection:")) {
+        if (child.textContent.startsWith("Word:") || child.textContent.startsWith("Word connection:")) {
           card['type'] = 'wordconnection';
           return;
         }
@@ -626,6 +621,54 @@ ${card["notes"].join("<br/>")}
       }
     },
 
+    automateLevel: function() {
+      var elms = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"));
+      elms = elms.slice(1, elms.length);  // first element is the level header/item
+
+      function doit(elms) {
+        Traverse.parseTraverseAndAdd(); // collect open card
+
+        if (elms.length == 0 || elms[0].textContent.indexOf("CLICK HERE") >= 0) {
+          console.log("no more elements to add, level done?");
+          UI.createFlash("Level/segment done!", 2500);
+          return; // done!
+        }
+        console.log(`${elms.length} elements remaining, about ${elms.length * 10} seconds (${elms.length * 10 / 60} minutes)`);
+        elm = elms[0];
+        elms = elms.slice(1,elms.length);
+        elm.click();
+        console.debug("clicked");
+        window.setTimeout(
+          (elms) => {
+            doit(elms)
+          },
+          10000,
+          elms);
+      }
+
+      UI.createFlash("Beginning automation, hold on!", 2500);
+      var selectedStyle = "(0, 148, 255)";
+      var idx = 0;
+      for (idx in elms) {
+        console.log(idx);
+        var elm = elms[idx];
+        console.log(elm.parentNode.parentNode.style['border-color']);
+        if (elm.parentNode.parentNode.style['border-color'].split(" rgb")[2] == selectedStyle) {
+          console.log(`current selected element position: idx: ${idx}: ${elm.textContent}`);
+          break;
+        }
+      }
+      elms = elms.slice(idx, elms.length); // slice the elms to progress from current selected item
+      elms[0].click(); // click the first real card element
+      elms = elms.slice(1, elms.length);
+      window.setTimeout(
+        (elms) => {
+          doit(elms)
+        },
+        5000,
+        elms);
+    },
+    
     attachNotes: function(card) {
       var edit_fields = document.getElementsByClassName("group/editor")
       for (var elm of edit_fields) {
@@ -635,10 +678,10 @@ ${card["notes"].join("<br/>")}
           var a_href = elm.getElementsByTagName("a");
           if (a_href.length > 0) {
             a_href = a_href[0];
-          	if (a_href.textContent == "Source Video Lesson") {
-	            card["source lesson"] = `<a href="${a_href.getAttribute('href')}">source lesson</a>`;
-	            textValue = textValue.replace('Source Video Lesson', '');
-  	        }
+            if (a_href.textContent == "Source Video Lesson") {
+              card["source lesson"] = `<a href="${a_href.getAttribute('href')}">source lesson</a>`;
+              textValue = textValue.replace('Source Video Lesson', '');
+            }
           }
           if (textValue.length > 0) {
             card['notes'].push(textValue);
@@ -743,9 +786,14 @@ ${card["notes"].join("<br/>")}
         idx = parseInt(idx);
         var child = children[idx];
         
-        if (child.textContent.startsWith("Meaning")) { card["keyword"] = children[idx+1].textContent; }
+        if (child.textContent.startsWith("Meaning") || child.textContent.startsWith("English")) { card["keyword"] = children[idx+1].textContent; }
         else if (child.textContent.startsWith("Pinyin")) { card["pinyin"] = children[idx+1].textContent; }
-        else if (child.textContent.startsWith("Word connection:")) { card["hanzi"] = child.textContent.split("Word connection:")[1].trim(); }
+        else if (child.textContent.startsWith("Word connection:")) {
+          card["hanzi"] = child.textContent.split("Word connection:")[1].trim();
+        }
+        else if (child.textContent.startsWith("Word:")) {
+          card["hanzi"] = child.textContent.split("Word:")[1].trim();
+        }
         else {
           this.attachAudio(card, child);
         }
@@ -773,7 +821,7 @@ ${card["notes"].join("<br/>")}
             card['actor'] = children[idx].textContent.split("Actors:")[1].trim();
           }
           else {
-          	card['actor'] = children[idx].textContent.split("Actor:")[1].trim();
+            card['actor'] = children[idx].textContent.split("Actor:")[1].trim();
           }
         }
         else if (child.textContent.startsWith("Set")) { card['set'] = children[idx].textContent.split("Set:")[1].trim(); }
@@ -800,20 +848,20 @@ ${card["notes"].join("<br/>")}
   };
 
   var UI = {
-    createSuccessIcon: function() {
+    createFlash: function(message, timeout) {
       var toolbar = document.getElementsByClassName('MuiToolbar-regular')[0];
       var add_button = document.createElement('button');
-      add_button.textContent = 'Added!';
+      add_button.textContent = message;
       add_button.setAttribute("id", "success-icon-yay");
       add_button.setAttribute("class", "homescreen-button learn-mode-button-container add-to-reviews-button-container");
-      add_button.setAttribute("style", "padding-right: 5px; padding-left: 5px; position: absolute; right: 0px; top: 58px; max-width: 100px; cursor: default;");
+      add_button.setAttribute("style", "padding-right: 5px; padding-left: 5px; position: absolute; right: 0px; top: 58px; max-width: 300px; cursor: default;");
       var anchor = toolbar.getElementsByClassName('homescreen-button')[0].parentNode;
       anchor.appendChild(add_button);
 
       function removeSuccess() {
         document.getElementById("success-icon-yay").remove();
       };
-      window.setTimeout(removeSuccess, 1200);
+      window.setTimeout(removeSuccess, timeout || 1200);
     },
 
     setDeckName: function(setting, def) {
@@ -873,6 +921,12 @@ ${card["notes"].join("<br/>")}
       st.addEventListener('click', function() { UI.setDeckName("sentenceDeck", ANKI.DEFAULTS.SENTENCE.DECK);}, false);
       inner_div.appendChild(st);
 
+      var auto = document.createElement('a');
+      auto.setAttribute('title', 'Create Anki cards from open level, starting with the selected node');
+      auto.textContent = 'Automagic (experimental)';
+      auto.addEventListener('click', Traverse.automateLevel, false);
+      inner_div.appendChild(auto);
+
       var toolbars = document.getElementsByClassName('MuiToolbar-regular');
       if (toolbars.length > 0) {
         toolbar = toolbars[0];
@@ -909,12 +963,13 @@ ${card["notes"].join("<br/>")}
 
 
   unsafeWindow.we_are_there = false;
+//   UI.createMenu();
   function areWeThereYet() {
     if (document.location.href.indexOf("/Mandarin_Blueprint/") > 0) {
       if (!unsafeWindow.we_are_there) { 
         UI.createDownloadButton();
-      	console.debug("yay");
-      	unsafeWindow.we_are_there = true;
+        console.debug("yay");
+        unsafeWindow.we_are_there = true;
         UI.createMenu();
       }
     } else {
@@ -925,5 +980,4 @@ ${card["notes"].join("<br/>")}
 
   console.log("LOADED?!?!");
   window.setInterval(areWeThereYet, 5000); // occasional check to see if we're in the right spot
-
 })();
