@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Traverse Export To Anki
 // @description  Export open Traverse cards to Anki (character or sentence cards)
-// @version      2.2
+// @version      2.2.1
 // @grant        unsafeWindow
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -622,18 +622,20 @@ ${card["notes"].join("<br/>")}
     },
 
     automateLevel: function() {
+      var delaySeconds = 13;
+
       var elms = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"));
       elms = elms.slice(1, elms.length);  // first element is the level header/item
 
       function doit(elms) {
         Traverse.parseTraverseAndAdd(); // collect open card
 
-        if (elms.length == 0 || elms[0].textContent.indexOf("CLICK HERE") >= 0) {
+        if (elms.length == 0 || elms[0].textContent.indexOf("CLICK HERE") >= 0 || elms[0].textContext.indexOf("LEVEL") >= 0 || elms[0].textContent.indexOf("句子") >= 0) {
           console.log("no more elements to add, level done?");
-          UI.createFlash("Level/segment done!", 2500);
+          UI.createFlash("Level/segment done!", 5000);
           return; // done!
         }
-        console.log(`${elms.length} elements remaining, about ${elms.length * 10} seconds (${elms.length * 10 / 60} minutes)`);
+        console.log(`${elms.length} elements remaining, about ${elms.length * delaySeconds} seconds (${elms.length * delaySeconds / 60} minutes)`);
         elm = elms[0];
         elms = elms.slice(1,elms.length);
         elm.click();
@@ -642,7 +644,7 @@ ${card["notes"].join("<br/>")}
           (elms) => {
             doit(elms)
           },
-          10000,
+          delaySeconds * 1000,
           elms);
       }
 
