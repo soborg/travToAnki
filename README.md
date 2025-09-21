@@ -1,3 +1,10 @@
+# What's New
+
+## v2.2 (2025-09-21)
+
+- \[EXPERIMENTAL\] Simple **automation**! Open a level of your choice, click the T2A-menu -> Automagic. It'll create all cards for that level with a single click.
+- fixing issue with not recognizing word connection cards correctly (they were incorrectly classified as sentences).
+
 # Installation
 
 ## Prerequisites
@@ -52,6 +59,17 @@ T2A can extract:
 - Every note type from the main MB course
 - MSLK
 - TPV soon'ish? who knows!
+
+## Work Flow (automation)
+
+* open a level.
+* click the T2A menu, click Automagic.
+* It will create all the cards for that level, beginning with the card you have open.
+
+**Note:** it does not descent into sub-levels/sub-groups, so for Sentences during the foundation levels (13 -> 30), and the sub-levels/sub-groups during Intermediate and beyond, you should navigate to those individually.
+
+**Note 2:** the automation has not yet been tested on Sentence levels, also there's an open issue for handling the newly added Sentence Production cards (en->cn), that are currently not handled correctly.
+It is not recommended to use the automation feature for these parts.
 
 ## Work Flow
 
