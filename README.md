@@ -1,5 +1,16 @@
 # What's New
 
+## V2.3 (2025-11-25)
+
+- Improve automation stability, add a stop button to stop processing further. Delay between each card in this process is up to 12 seconds, to account for Traverse's exceptionally slow loading of note assets/links.
+- add support for sentence production cards (download latest example.apkg to get the character note type into your Anki).
+- improved card type detection. Should now correctly detect and add notes for every card type in the core curriculum.
+- option to use separate decks for "regular" notes (props,movies,sets,actors), sentence notes, and sentence production notes.
+- MSLK/TPV note detection seems to work, (no stable support yet).
+
+This version has been battle tested with everything from Phase 1, 2, and 3.
+
+
 ## v2.2 (2025-09-21)
 
 - \[EXPERIMENTAL\] Simple **automation**! Open a level of your choice, click the T2A-menu -> Automagic. It'll create all cards for that level with a single click.
@@ -40,13 +51,13 @@ You must have:
 ## Installing the Tool
 
 * Open the following user script: https://github.com/soborg/travToAnki/raw/refs/heads/main/travToAnki.user.js
-* A prompt should appear automatically, click Install to install.
+* A prompt should appear automatically, click Install.
 
 
 # Using the Tool
 
 * Anki must be running. AnkiConnect must be enabled.
-* Open Traverse and open a card you'd like to add to Anki, an `Anki++` button should appear top-right after a few seconds.
+* Open Traverse and open a card you'd like to add to Anki, an `Anki++` button should appear immediately (if it doesn't, somethings wrong, please make an issue!).
 * Click the button, a green checkmark should flash briefly if it succeeded.
 * Verify in your Anki `Mining` deck that the new note is added (you may have to click the `Mining` deck in the Browse menu to refresh). If it's not, something's broken, create an issue or contact me if you know my contact details.
 
