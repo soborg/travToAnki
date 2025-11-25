@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Traverse Export To Anki
 // @description  Export open Traverse cards to Anki (character or sentence cards)
-// @version      2.2.2
+// @version      2.3
 // @grant        unsafeWindow
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -9,7 +9,22 @@
 // ==/UserScript==
 
 (function() {
-  var STAGED_CARD = {};
+  var SETTINGS = {
+    stopAutomationFlag: false,
+    DEBUG: false,
+    DEFAULTS: {
+      MOVIE: {DECK: "Mining", MODEL: "Character Note", TAG: "4-MAKE-A-MOVIE"},
+      PROP: {DECK: "Mining", MODEL: "PROP REVIEW", TAG: "1-PROPS"},
+      SET: {DECK: "Mining", MODEL: "SET REVIEW", TAG: "3-SETS"},
+      ACTOR: {DECK: "Mining", MODEL: "ACTOR REVIEW", TAG: "2-ACTORS"},
+      WORDCONNECTION: {DECK: "Mining", MODEL: "WORD CONNECTION REVIEW", TAG: "5-UNLOCKED-VOCAB"},
+      TPV: {DECK: "TPV", MODEL: "Sentence Note", TAG: "MB_TPV"},
+      MSLK: {DECK: "MSLK", MODEL: "Sentence Note", TAG: "MB_MSLK"},
+      CONVOCON: {DECK: "Conversation Connectors", MODEL: "MB CONVOCON REVIEW", TAG: "MB_CONVO_CON"},
+      SENTENCE: {DECK: "Mining Sentences", MODEL: "Sentence Note", TAG: "SENTENCE"},
+      SENTENCE_PRODUCTION: {DECK: "Mining Sentences", MODEL: "Sentence Note Production", TAG: "SENTENCE_PRODUCTION"}
+    },
+  };
 
   function GM_addStyle(css) {
      const style = document.getElementById("GM_addStyleByTravExport") || (function() {
@@ -41,16 +56,6 @@
   };
 
   var ANKI = {
-    DEFAULTS: {
-      MOVIE: {DECK: "Mining", MODEL: "Character Note", TAG: "4-MAKE-A-MOVIE"},
-      PROP: {DECK: "Mining", MODEL: "PROP REVIEW", TAG: "1-PROPS"},
-      SET: {DECK: "Mining", MODEL: "SET REVIEW", TAG: "3-SETS"},
-      ACTOR: {DECK: "Mining", MODEL: "ACTOR REVIEW", TAG: "2-ACTORS"},
-      WORDCONNECTION: {DECK: "Mining", MODEL: "WORD CONNECTION REVIEW", TAG: "5-UNLOCKED-VOCAB"},
-      CONVOCON: {DECK: "Conversation Connectors", MODEL: "MB CONVOCON REVIEW", TAG: "MB_CONVO_CON"},
-      SENTENCE: {DECK: "Mining Sentences", MODEL: "MB Cloze", TAG: "SENTENCE"}
-    },
-
     options: {
       "allowDuplicate": true,
       "duplicateScope": "deck",
@@ -70,34 +75,77 @@
     },
     
     createSentence: function(card) {
-      var targetDeck = unsafeWindow.localStorage.getItem("sentenceDeck") || this.DEFAULTS.SENTENCE.DECK;
+      var targetDeck = unsafeWindow.localStorage.getItem("sentenceDeck") || SETTINGS.DEFAULTS.SENTENCE.DECK;
       var pictures = [];
       var audio_fields = [];
-      var modelName = ANKI.DEFAULTS.SENTENCE.MODEL;
+      var modelName = SETTINGS.DEFAULTS.SENTENCE.MODEL;
       var noteTag = "SENTENCE";
       var tags = card['tags'];
       tags.push(noteTag);
 
-      var notes = `Usages: <br/>
-${card["usage"].join("<br/>")}<br/><br/>
-Characters: <br/>
-${card["characters"].join("<br/>")}<br/>
-Personal Notes: <br/>
-${card["notes"].join("<br/>")}
-`;
       var fields = {
         "Sentence": card["hanzi"],
-        "English": card["keyword"],
-        "Notes": notes
+        "English": card["english"] || "",
+        "Keyword": card["word"] || "",
+        "Notes": card["notes"].join("<br/>"),
+        "Usage": card["usage"].join("<br/>"),
+        "Top-Down Words": card["top-down"].join("<br/>")
       }
 
       if (card["word"]) {
-        //var cloze = card["word"].replace(card["characters"][0], `{{c1::${card["characters"][0]}}}`);
-        var cloze = card["word"].replace(card["characters"][0], `${card["characters"][0]}`); // fake cloze
-        fields["Sentence"] = fields["Sentence"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${cloze}</span>`);
-        fields["Sentence"] += "{{c1::}}";
+        fields["Sentence"] = fields["Sentence"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${card["word"]}</span>`);
       }
-      fields["Top-Down Words"] = `${card["top-down"].join("<br/>")}`;
+
+      card["audio"].forEach(a => {
+        var split_fields = a.split("/");
+        var filename = split_fields[split_fields.length-1];
+        if (filename.length > 36) {
+          filename = tags[0] + "-" + this.generateUID(filename)+'.mp3';
+        }
+        audio_fields.push({
+          "url": a,
+          "filename": filename,
+          "skipHash": "",
+          "fields": ["Audio"]
+        })
+      });
+
+      var params = {
+        "note": {
+            "deckName": targetDeck,
+            "modelName": modelName,
+            "fields": fields,
+            "options": this.options,
+            "tags": tags,
+            "audio": audio_fields,
+            "picture": pictures
+        }
+      }
+      return params;
+    },
+
+    createSentenceProduction: function(card) {
+      var targetDeck = unsafeWindow.localStorage.getItem("sentenceProductionDeck") || SETTINGS.DEFAULTS.SENTENCE_PRODUCTION.DECK;
+      var pictures = [];
+      var audio_fields = [];
+      var modelName = SETTINGS.DEFAULTS.SENTENCE_PRODUCTION.MODEL;
+      var noteTag = "SENTENCE_PRODUCTION";
+      var tags = card['tags'];
+      tags.push(noteTag);
+
+      var fields = {
+        "Chinese": card["hanzi"],
+        "English": card["english"] || "",
+        "Keyword": card["word"] || "",
+        "Notes": card["notes"].join("<br/>"),
+        "Usage": card["usage"].join("<br/>"),
+        "Top-Down Words": card["top-down"].join("<br/>")
+      }
+
+      if (card["word"]) {
+        fields["Chinese"] = fields["Chinese"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${card["word"]}</span>`);
+      }
+
       card["audio"].forEach(a => {
         var split_fields = a.split("/");
         var filename = split_fields[split_fields.length-1];
@@ -126,8 +174,55 @@ ${card["notes"].join("<br/>")}
       return params;
     },
     
+    createMSLK: function(card) {
+      var targetDeck = SETTINGS.DEFAULTS.MSLK.DECK;
+      var modelName = SETTINGS.DEFAULTS.MSLK.MODEL;
+      var noteTag = SETTINGS.DEFAULTS.MSLK.TAG;
+      var pictures = [];
+      var audio_fields = [];
+      var tags = card['tags'];
+      tags.push(noteTag);
+
+      var fields = {
+        "Sentence": card["sentence"],
+        "English": card["english"] || "",
+        "Pinyin": card["pinyin"] || "",
+        "Keyword": card["word"] || "",
+        "Notes": card["notes"].join("<br/>"),
+        "Usage": card["usage"].join("<br/>"),
+        "Top-Down Words": card["top-down"].join("<br/>")
+      }
+
+      card["audio"].forEach(a => {
+        var split_fields = a.split("/");
+        var filename = split_fields[split_fields.length-1];
+        if (filename.length > 36) {
+          filename = tags[0] + "-" + this.generateUID(filename)+'.mp3';
+        }
+        audio_fields.push({
+          "url": a,
+          "filename": filename,
+          "skipHash": "",
+          "fields": ["Audio"]
+        })
+      });
+
+      var params = {
+        "note": {
+            "deckName": targetDeck,
+            "modelName": modelName,
+            "fields": fields,
+            "options": this.options,
+            "tags": tags,
+            "audio": audio_fields,
+            "picture": pictures
+        }
+      }
+      return params;
+    },
+
     createProp: function(card) {
-      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || ANKI.DEFAULTS.PROP.DECK;
+      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || SETTINGS.DEFAULTS.PROP.DECK;
       var tags = card['tags'];
       var prop = `${card["notes"].join("<br/>")}`;
       var fields = {
@@ -135,7 +230,7 @@ ${card["notes"].join("<br/>")}
         PROP: prop || "()",
         "SOURCE LESSON": card["source lesson"] || "",
       };
-      var modelName = ANKI.DEFAULTS.PROP.MODEL;
+      var modelName = SETTINGS.DEFAULTS.PROP.MODEL;
       var noteTag = "1-PROPS";
       tags.push(noteTag);
 
@@ -154,7 +249,7 @@ ${card["notes"].join("<br/>")}
     },
     
     createSet: function(card) {
-      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || ANKI.DEFAULTS.SET.DECK;
+      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || SETTINGS.DEFAULTS.SET.DECK;
       var tags = card['tags'];
       var set = `${card["notes"].join("<br/>")}`;
       var fields = {
@@ -162,8 +257,8 @@ ${card["notes"].join("<br/>")}
         SET: set || "()",
         "SOURCE LESSON": card["source lesson"] || "",
       };
-      var modelName = ANKI.DEFAULTS.SET.MODEL;
-      var noteTag = "3-SETS";
+      var modelName = SETTINGS.DEFAULTS.SET.MODEL;
+      var noteTag = SETTINGS.DEFAULTS.SET.TAG;
       tags.push(noteTag);
 
       var params = {
@@ -181,7 +276,7 @@ ${card["notes"].join("<br/>")}
     },
     
     createActor: function(card) {
-      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || ANKI.DEFAULTS.ACTOR.DECK;
+      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || SETTINGS.DEFAULTS.ACTOR.DECK;
       var tags = card['tags'];
       var actor = `${card["notes"].join("<br/>")}`;
       var fields = {
@@ -189,8 +284,8 @@ ${card["notes"].join("<br/>")}
         ACTOR: actor || "()",
         "SOURCE LESSON": card["source lesson"] || "",
       };
-      var modelName = ANKI.DEFAULTS.ACTOR.MODEL;
-      var noteTag = "2-ACTORS";
+      var modelName = SETTINGS.DEFAULTS.ACTOR.MODEL;
+      var noteTag = SETTINGS.DEFAULTS.ACTOR.TAG;
       tags.push(noteTag);
 
       var params = {
@@ -208,7 +303,7 @@ ${card["notes"].join("<br/>")}
     },
     
     createWordConnection: function(card) {
-      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || ANKI.DEFAULTS.WORDCONNECTION.DECK;
+      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || SETTINGS.DEFAULTS.WORDCONNECTION.DECK;
       var tags = card['tags'];
       var livedexperience = `${card["notes"].join("<br/>")}`;
       var audio_fields = [];
@@ -220,8 +315,8 @@ ${card["notes"].join("<br/>")}
         "LIVED EXPERIENCE": livedexperience,
         "SOURCE LESSON": card["source lesson"] || "",
       };
-      var modelName = ANKI.DEFAULTS.WORDCONNECTION.MODEL;
-      var noteTag = ANKI.DEFAULTS.WORDCONNECTION.TAG;
+      var modelName = SETTINGS.DEFAULTS.WORDCONNECTION.MODEL;
+      var noteTag = SETTINGS.DEFAULTS.WORDCONNECTION.TAG;
       tags.push(noteTag);
 
       card["audio"].forEach(a => {
@@ -249,9 +344,9 @@ ${card["notes"].join("<br/>")}
     },
 
     createCharacter: function(card) {
-      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || ANKI.DEFAULTS.MOVIE.DECK;
-      var modelName = ANKI.DEFAULTS.MOVIE.MODEL;
-      var noteTag = "4-MAKE-A-MOVIE";
+      var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || SETTINGS.DEFAULTS.MOVIE.DECK;
+      var modelName = SETTINGS.DEFAULTS.MOVIE.MODEL;
+      var noteTag = SETTINGS.DEFAULTS.MOVIE.TAG;
       var tags = card['tags'];
       var audio_fields = [];
       var pictures = [];
@@ -334,14 +429,13 @@ ${card["notes"].join("<br/>")}
         }
       }
       return params;
-
     },
-    
+
     createConvoConnector: function(card) {
-      var targetDeck = unsafeWindow.localStorage.getItem("convoDeck") || "Conversation Connectors";
-      var modelName = "MB CONVOCON REVIEW";
+      var targetDeck = unsafeWindow.localStorage.getItem("convoDeck") || SETTINGS.DEFAULTS.CONVOCON.DECK; // "Conversation Connectors";
+      var modelName = SETTINGS.DEFAULTS.CONVOCON.MODEL; // "MB CONVOCON REVIEW";
       var tags = card['tags'];
-      var noteTag = "MB_CONVO_CON";
+      var noteTag = SETTINGS.DEFAULTS.CONVOCON.TAG; // "MB_CONVO_CON";
       var audio_fields = [];
       tags.push(noteTag);
 
@@ -385,11 +479,15 @@ ${card["notes"].join("<br/>")}
     
     createAnkiNote: function(card) {
       var note;
+
       if (card["type"] == "convo_connector") {
         note = this.createConvoConnector(card);
       }
       else if (card["type"] == "sentence") {
         note = this.createSentence(card);
+      }
+      else if (card["type"] == "sentence_production") {
+        note = this.createSentenceProduction(card);
       }
       else if (card["type"] == "movie review") {
         note = this.createCharacter(card);
@@ -407,12 +505,16 @@ ${card["notes"].join("<br/>")}
         note = this.createWordConnection(card);
       } else {
         console.log("unknown card type, this will go bad");
+        UI.createFlash(`unknown card type (${card["type"]})`);
+        return;
       }
 
       if (note) {
         console.log(card);
         console.log(note);
-        return this.anki_invoke('addNote', 6, note).then(result => { UI.createFlash("Added!"); });
+        if (!SETTINGS.debug) {
+	        return this.anki_invoke('addNote', 6, note).then(result => { UI.createFlash("Added!"); });
+        }
       } else {
         console.error("could not create note, type not recognized");
       }
@@ -451,10 +553,20 @@ ${card["notes"].join("<br/>")}
   };
 
   var Traverse = {
+    
     attachCardType: function(card, children) {
+      var graph_elements = document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full");
+      if (graph_elements[0].textContent.indexOf("TPV - ") >= 0) {
+        card["type"] = "TPV";
+        return;
+      }
+      if (graph_elements[0].textContent.indexOf("Mandarin Speaking and Listening Kickstarter") >= 0) {
+        card["type"] = "MSLK";
+        return;
+      }
+
       for (var idx=0; idx<children.length; idx++) {
         var child = children[idx];
-        console.log(idx, child);
         if (child.textContent.startsWith("Movie review")) {
           card['type'] = 'movie review';
           card['hanzi'] = child.textContent.split("Movie review:")[1].trim();
@@ -479,11 +591,18 @@ ${card["notes"].join("<br/>")}
         }
         if ((child.textContent.startsWith("Characters:") || child.textContent.startsWith("Sentence"))) {
           var toplevel_h2 = child.parentNode.getElementsByTagName("H2");
-          if (toplevel_h2[0].getElementsByClassName("highlight-review").length == 1){
+          if (toplevel_h2[0].nextElementSibling.tagName == "P" && toplevel_h2[0].nextElementSibling.getElementsByClassName("highlight-review").length > 0) {
+            card['type'] = 'sentence';
+          }
+          else if (toplevel_h2[0].getElementsByClassName("highlight-review").length > 0 || toplevel_h2[0].textContent.indexOf("。") > 0){
             card['type'] = 'sentence';
           } else {
-            card['type'] = 'sentence_production';
-          }            
+            if (toplevel_h2[0].textContent.match(/[A-Za-z]/g).length > 3) {
+	            card['type'] = 'sentence_production';
+            } else {
+              card['type'] = 'sentence';
+            }
+          }
           return;
         }
         if (child.textContent.startsWith("Add to reviews")) {
@@ -497,6 +616,10 @@ ${card["notes"].join("<br/>")}
       }
     },
 
+    cleanText: function(textelm) {
+      return textelm.replaceAll("Your browser does not support the audio element.", "").trim();
+    },
+    
     parseConvoConnector: function(children) {
       var card = {
         type: "convo_connector",
@@ -512,11 +635,11 @@ ${card["notes"].join("<br/>")}
         var child = children[idx];
 
         if (child.textContent.startsWith("English phrase:")) {
-          card["englishPhrase"] = children[idx+1].textContent.trim();
+          card["englishPhrase"] = this.cleanText(children[idx+1].textContent);
         }
         else if (child.textContent.startsWith("Chinese phrase:")) {
-          card["chinesePhrase"] = children[idx+1].textContent.trim();
-          card["pinyin"] = children[idx+2].textContent.replace("Your browser does not support the audio element.", "").trim();
+          card["chinesePhrase"] = this.cleanText(children[idx+1].textContent);
+          card["pinyin"] = this.cleanText(children[idx+2].textContent);
         }
         else {
           this.attachAudio(card, child);
@@ -529,8 +652,8 @@ ${card["notes"].join("<br/>")}
     parseMSLK: function(children) {
       var card = {
         type: "MSLK",
-        englishPhrase: "",
-        chinesePhrase: "",
+        english: "",
+        sentence: "",
         pinyin: "",
         audio: [],
         tags: ["MSLK"],
@@ -541,20 +664,15 @@ ${card["notes"].join("<br/>")}
         var child = children[idx];
 
         if (child.textContent.startsWith("English")) {
-          card["englishPhrase"] = children[idx+1].textContent.replace("Your browser does not support the audio element.", "").trim();
+          card["english"] = this.cleanText(children[idx+1].textContent);
         }
         else if (child.textContent.startsWith("Chinese")) {
-          card["pinyin"] = children[idx+1].textContent.replace("Your browser does not support the audio element.", "").trim();
-          var phrase = children[idx+2].textContent.replace("Your browser does not support the audio element.", "").trim()
-          if (phrase.indexOf("Phrase #")) {
-            var phraseNum = phrase.split("Phrase #")[1].trim();
-            var phrase = phrase.split("Phrase #")[0].trim();
-            card["tags"].push(`Phrase#${phraseNum}`);
-          }
-          card["chinesePhrase"] = phrase;
+          card["pinyin"] = this.cleanText(children[idx+2].textContent);
+          var phrase = this.cleanText(children[idx+1].textContent);
+          card["sentence"] = phrase;
         }
         else if (child.textContent.startsWith("Phrase #")) {
-          var phraseNum = phrase.split("Phrase #")[1].trim();
+          var phraseNum = child.textContent.split("Phrase #")[1].trim();
           card["tags"].push(`Phrase#${phraseNum}`);
         }
         else {
@@ -598,10 +716,11 @@ ${card["notes"].join("<br/>")}
 
       this.attachCardType(card, children);
       if (!card['type']) {
-        console.log("could not identify card type, sorry");
+        UI.createFlash("Error! Could not identify card type", 5000, true);
+        console.error("could not identify card type, sorry");
         return;
       }
-      console.debug(card);
+      console.debug("detected card info", card);
       try {
         var document_level = document.getElementsByClassName("max-h-full")[0].textContent.match(/\d+/)[0];
         var level_tag = "MBMLEVEL"+document_level;
@@ -617,65 +736,110 @@ ${card["notes"].join("<br/>")}
       if (card["type"] == "wordconnection") { card = this.parseWordConnection(card, children); }
       if (card["type"] == "convo_connector") { card = this.parseConvoConnector(children); }
       if (card["type"] == "MSLK") { card = this.parseMSLK(children); }
+      if (card["type"] == "TPV") { console.log(card); }
       return card
     },
 
     parseTraverseAndAdd: function() {
       var card = Traverse.parseTraverseCard();
-      if (["movie review", "sentence", "prop", "set", "actor", "wordconnection", "convo_connector"].indexOf(card["type"]) >= 0) {
+      if (card && ["movie review", "sentence", "sentence_production", "prop", "set", "actor", "wordconnection", "convo_connector"].indexOf(card["type"]) >= 0) {
         ANKI.createAnkiNote(card);
       }
     },
+    
+    enqueueLevel: function() {
+     	var queue = [];
+      var elms = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"));
+			for (var e of elms) {
+        if (e.textContent.indexOf(" - 汉字") >= 0 || e.textContent.indexOf(" - 句子") >= 0) {
+          queue.push(e);
+        }
+      }
+
+      queue[0].click();
+      console.log('asdasd');
+      window.setTimeout(() => {console.log("calling"); Traverse.automateLevel(); }, 3000);
+    },
 
     automateLevel: function() {
-      var delaySeconds = 12;
-      function doit(elms) {
+      console.log("hello");
+			SETTINGS.stopAutomationFlag = false;
+			UI.createStopButton();
+
+      function doit(pointer) {
+        var delaySeconds = 12;
+        console.log("moving pointer?", pointer);
+        console.log("stopping?", SETTINGS.stopAutomationFlag);
         Traverse.parseTraverseAndAdd(); // collect open card
 
-        console.log(elms[0]);
-        if (elms.length == 0 || elms[0].textContent.indexOf("CLICK HERE") >= 0 || elms[0].textContent.indexOf("LEVEL") >= 0 || elms[0].textContent.indexOf("句子") >= 0) {
+				var elms = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"))
+        var elm = elms[pointer];
+        var remaining = elms.slice(pointer, elms.length);
+        
+        console.log(elm);
+
+        if (SETTINGS.stopAutomationFlag == true) {
+          UI.createFlash("Automation aborted", 9000);
+          console.log("aborting automation");
+          return;
+        }
+
+        if (!elm || elm.textContent.indexOf("CLICK HERE") >= 0 || elm.textContent.indexOf("LEVEL") >= 0 || elm.textContent.indexOf("句子") >= 0) {
           console.log("no more elements to add, level done?");
           UI.createFlash("Level/segment done!", 5000);
+          UI.stopAutomation();
           return; // done!
         }
-        console.log(`${elms.length} elements remaining, about ${elms.length * delaySeconds} seconds (${elms.length * delaySeconds / 60} minutes)`);
-        elm = elms[0];
-        elms = elms.slice(1,elms.length);
+        console.log(`${remaining.length} left, ~ ${remaining.length * delaySeconds} sec. (${remaining.length * delaySeconds / 60} min.)`);
+
+        if (elm.textContent.indexOf("PROP") >= 0) {
+          delaySeconds = 6;
+        }
+
         elm.click();
         console.debug("clicked");
+
         window.setTimeout(
-          (elms) => {
-            doit(elms)
+          (pointer) => {
+            doit(pointer)
           },
           delaySeconds * 1000,
-          elms);
+          pointer+1);
       }
+
 
       var elms = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"));
       elms = elms.slice(1, elms.length);  // first element is the level header/item
 
-      UI.createFlash("Beginning automation, hold on!", 4000);
       var selectedStyle = "(0, 148, 255)";
       var idx = 0;
       for (idx in elms) {
-        console.log(idx);
+        idx = parseInt(idx);
         var elm = elms[idx];
-        console.log(elm.parentNode.parentNode.style['border-color']);
+
+        if ((elm.textContent.indexOf(" - 汉字") >= 0 || elm.textContent.indexOf(" - 句子") >= 0 ) && elm.parentNode.parentNode.style['border-color'].split(" rgb")[2] == selectedStyle) { // it's the next one lol
+          idx++;
+          break;
+        }
+
         if (elm.parentNode.parentNode.style['border-color'].split(" rgb")[2] == selectedStyle) {
           console.log(`current selected element position: idx: ${idx}: ${elm.textContent}`);
           break;
         }
       }
-      elms = elms.slice(idx, elms.length); // slice the elms to progress from current selected item
-      console.log(elms);
-      elms[0].click(); // click the first real card element
-      elms = elms.slice(1, elms.length);
-      window.setTimeout(
-        (elms) => {
-          doit(elms)
-        },
-        5000,
-        elms);
+      UI.createFlash(`Automation begun! (~ ${elms.slice(idx, elms.length).length * 12 / 60} min)`, 8000);
+
+      elm = elms[idx];
+      idx++;
+      elm.click();
+      window.setTimeout((pointer) => {doit(pointer)}, 12000, idx+1);
+
+    },
+
+    stopAutomation: function() {
+      SETTINGS.stopAutomationFlag = true;
+      elm = document.getElementById("stopauto");
+      elm.remove();
     },
     
     attachNotes: function(card) {
@@ -708,33 +872,65 @@ ${card["notes"].join("<br/>")}
     },
 
     parseSentence: function(card, children) {
+      var card = {
+        'type': "sentence",
+        'hanzi': '',
+        'english': '',
+        'keyword': null,
+        'audio': [],
+        'notes': [],
+        'usage': [],
+        'characters': [],
+        'source lesson': null,
+        'tags': card["tags"],
+        'top-down': [],
+        'word': ""
+      };
+
+
       for (var idx in children) {
         var idx = parseInt(idx);
         var child = children[idx];
         if (child.tagName == "P" && child.textContent.length > 3 && child.children.length == 0) {
-          if (child.textContent.indexOf("用法") >= 0) {
+          if (child.textContent.indexOf("用法") >= 0) { // this crap seems to appear during intermediate+
             card["usage"].push(child.textContent);
           } else {
-            if (child.textContent != card["keyword"]) { 
-              card['top-down'].push(child.textContent);
+            if (child.textContent.match(/^\d\./) || child.textContent.match(/^"/)) { // sometimes usage parts start with <number><dot> or " , which seem unique to this field
+              card["usage"].push(child.textContent);
+            }
+            else {
+              if (card["usage"].indexOf(child.textContent) < 0) {  // we found some text, it's usually a top-down word at this point
+                card['top-down'].push(child.textContent);
+              }
             }
           }
         }
 
         if (child.tagName == "H2" && idx == 0) {
           card["hanzi"] = child.textContent;
-          if (child.parentNode.getElementsByTagName("H2")[1].textContent == "") { // there is no translation!
-            card["keyword"] = children[idx+1].textContent; // the next element is usually cloze keyword            
-          } else {
-            card["english"] = children[idx+1].textContent;
-            card["keyword"] = children[idx+2].textContent; // the next element is usually cloze keyword
+          if (children[idx+1].tagName == "P" && children[idx+1].textContent.length > 0) {  // for dialogues, the siblings are sometimes P-tags
+            card["hanzi"] += children[idx+1].textContent;
           }
+
           var mark_elm = child.getElementsByTagName("mark")[0];
           if (mark_elm != undefined) {
             card["word"] = mark_elm.textContent;
           }
+          if (child.nextElementSibling.tagName == "P" && child.nextElementSibling.getElementsByClassName("highlight-review").length > 0) {
+            var mark_elm = child.nextElementSibling.getElementsByClassName("highlight-review")[0];
+            card["word"] = mark_elm.textContent;
+          }
         }
-        
+        else if (child.tagName == "H2" && idx > 0) { // it's the english phrase
+          card["english"] = child.textContent;
+          if (children[idx+2].textContent.length > 3) {   // .. and a short text explaining the usage, if any
+          	card["usage"].push(children[idx+2].textContent);
+            if (children[idx+3].tagName == "P" && this.cleanText(children[idx+3].textContent).length > 0) {
+              card["usage"].push(this.cleanText(children[idx+3].textContent));
+            }
+          }
+        }
+
         else if (child.textContent.startsWith("Characters:")) {
           for (var propelm of child.children) {
             if (!propelm.textContent || propelm.textContent == "Characters:") { continue }
@@ -754,19 +950,37 @@ ${card["notes"].join("<br/>")}
       return card;
     },
     
+    getSiblings: function(node) {
+      const siblings = [];
+	    let nextSibling = node.nextElementSibling;
+
+	    while (nextSibling) {
+		    if (nextSibling.tagName != "P" || (nextSibling.tagName == "P" && nextSibling.getElementsByTagName("span").length > 0)) { break } // it's not a relevant tag, or has nested tags (probably audio)
+		    if (nextSibling.tagName == "P") { siblings.push(nextSibling); }
+	        nextSibling = nextSibling.nextElementSibling;
+	    }
+	    return siblings;
+    },
+
     parseSentenceProduction: function(card, children) {
+      var card = {
+        'type': "sentence_production",
+        'hanzi': '',
+        'english': '',
+        'keyword': null,
+        'audio': [],
+        'notes': [],
+        'usage': [],
+        'characters': [],
+        'source lesson': null,
+        'tags': card["tags"],
+        'top-down': [],
+        'word': "",
+      };
+      
       for (var idx in children) {
         var idx = parseInt(idx);
         var child = children[idx];
-        if (child.tagName == "P" && child.textContent.length > 3 && child.children.length == 0) {
-          if (child.textContent.indexOf("用法") >= 0) {
-            card["usage"].push(child.textContent);
-          } else {
-            if (child.textContent != card["keyword"]) {
-              card['top-down'].push(child.textContent);
-            }
-          }
-        }
 
         var mark_elm = child.getElementsByTagName("mark")[0];
         if (mark_elm != undefined) {
@@ -775,12 +989,24 @@ ${card["notes"].join("<br/>")}
 
         if (child.tagName == "H2" && idx == 0) {
           card["english"] = child.textContent;
-          card["hanzi"] = children[idx+1].textContent;
-          card["keyword"] = children[idx+2].textContent; // the next element is usually cloze keyword
-//           var mark_elm = child.getElementsByTagName("mark")[0];
-//           if (mark_elm != undefined) {
-//             card["word"] = mark_elm.textContent;
-//           }
+        }
+        else if (child.tagName == "H2" && idx > 0) { // it's the chinese phrase
+          card["hanzi"] = child.textContent;
+          
+          if (children[idx+1].textContent.length > 0) {
+            if (children[idx+1].getElementsByTagName("mark")[0]) {
+              card["hanzi"] += children[idx+1].textContent;
+              if (this.cleanText(children[idx+2].textContent).length > 0) {
+              	card["top-down"].push(this.cleanText(children[idx+2].textContent));
+              }
+            } else {
+              if (this.cleanText(children[idx+1].textContent).length > 0) {
+								console.log(children[idx+1].textContent);
+                console.log(this.cleanText(children[idx+1].textContent));
+              	card["top-down"].push(this.cleanText(children[idx+1].textContent));
+              }
+            }
+          }
         }
         else if (child.textContent.startsWith("Characters:")) {
           for (var propelm of child.children) {
@@ -800,7 +1026,7 @@ ${card["notes"].join("<br/>")}
       this.attachNotes(card);
       return card;
     },
-
+    
     parseProp: function(card, children) {
       for (var child of children) {
         if (child.textContent.startsWith("Pick a prop for")) { card["component"] = child.textContent.split("Pick a prop for")[1].trim(); }
@@ -810,6 +1036,9 @@ ${card["notes"].join("<br/>")}
         if (elm.textContent && elm.getAttribute('id').toLowerCase().indexOf("field-prop") > 0) {
           if (elm.textContent.length > 0) {
             card['notes'].push(elm.textContent);
+          }
+          for (var img of elm.getElementsByTagName("img")) {
+            console.log(img.getAttribute('src'));
           }
         }
       }
@@ -909,16 +1138,21 @@ ${card["notes"].join("<br/>")}
       this.attachNotes(card);
       return card;
     },
+
   };
 
   var UI = {
-    createFlash: function(message, timeout) {
+    createFlash: function(message, timeout, warning) {
       var toolbar = document.getElementsByClassName('MuiToolbar-regular')[0];
       var add_button = document.createElement('button');
       add_button.textContent = message;
       add_button.setAttribute("id", "success-icon-yay");
-      add_button.setAttribute("class", "homescreen-button learn-mode-button-container add-to-reviews-button-container");
-      add_button.setAttribute("style", "padding-right: 5px; padding-left: 5px; position: absolute; right: 0px; top: 58px; max-width: 300px; cursor: default;");
+      if (warning) {
+        add_button.setAttribute("class", "homescreen-button learn-mode-button-container skip-button-container");
+      } else {
+      	add_button.setAttribute("class", "homescreen-button learn-mode-button-container add-to-reviews-button-container");
+      }
+      add_button.setAttribute("style", "padding-right: 5px; padding-left: 5px; position: absolute; right: 0px; top: 58px; max-width: 300px; cursor: default; min-height: 50px; height: fit-content;");
       var anchor = toolbar.getElementsByClassName('homescreen-button')[0].parentNode;
       anchor.appendChild(add_button);
 
@@ -945,7 +1179,21 @@ ${card["notes"].join("<br/>")}
       dropdown.classList.toggle('show');
     },
 
+    createStopButton: function() {
+      var toolbar = document.getElementsByClassName('MuiToolbar-regular')[0];
+      var add_button = document.createElement('button');
+      add_button.textContent = 'Stop Auto';
+      add_button.setAttribute('class', 'homescreen-button cue-button review-due-button onboarding-review-due button-glow');
+      add_button.setAttribute('title', 'Stop automation');
+      add_button.setAttribute('id', 'stopauto');
+      add_button.addEventListener('click', Traverse.stopAutomation, false);
+      var anchor = toolbar.getElementsByClassName('MuiButtonBase-root MuiIconButton-root MuiIconButton-colorInherit')[0].parentNode; // homescreen-button')[0].parentNode;
+      anchor.appendChild(add_button);
+    },
+
     createMenu: function() {
+      if (document.getElementById("t2amenu")) return;
+
       document.addEventListener('click', (event) => {
         if (!event.target.matches('.dropbtn')) {
           var dropdowns = document.getElementsByClassName("dropdown-content");
@@ -962,6 +1210,7 @@ ${card["notes"].join("<br/>")}
       outer_div.classList.toggle("dropdown");
       var button = document.createElement('button');
       button.textContent = 'T2A';
+      button.setAttribute("id", "t2amenu");
       button.classList.toggle('homescreen-button');
       button.classList.toggle('dropbtn');
       button.setAttribute('title', 'Traverse 2 Anki Settings');
@@ -976,13 +1225,19 @@ ${card["notes"].join("<br/>")}
       var scrape_card = document.createElement('a');
       scrape_card.setAttribute('title', 'Set Character Deck');
       scrape_card.textContent = 'Character Deck Name';
-      scrape_card.addEventListener('click', () => { UI.setDeckName("miningDeck", ANKI.DEFAULTS.MOVIE.DECK);}, false);
+      scrape_card.addEventListener('click', () => { UI.setDeckName("miningDeck", SETTINGS.DEFAULTS.MOVIE.DECK);}, false);
       inner_div.appendChild(scrape_card);
 
       var st = document.createElement('a');
       st.setAttribute('title', 'Set Sentence Deck');
       st.textContent = 'Sentence Deck Name';
-      st.addEventListener('click', function() { UI.setDeckName("sentenceDeck", ANKI.DEFAULTS.SENTENCE.DECK);}, false);
+      st.addEventListener('click', function() { UI.setDeckName("sentenceDeck", SETTINGS.DEFAULTS.SENTENCE.DECK);}, false);
+      inner_div.appendChild(st);
+
+      var st = document.createElement('a');
+      st.setAttribute('title', 'Set Sentence Production Deck');
+      st.textContent = 'SentenceProduction Deck Name';
+      st.addEventListener('click', function() { UI.setDeckName("sentenceProductionDeck", SETTINGS.DEFAULTS.SENTENCE_PRODUCTION.DECK);}, false);
       inner_div.appendChild(st);
 
       var auto = document.createElement('a');
@@ -996,13 +1251,15 @@ ${card["notes"].join("<br/>")}
         toolbar = toolbars[0];
         var anchor = toolbar.getElementsByClassName('homescreen-button')[0].parentNode;
         anchor.appendChild(outer_div);
-        console.debug('download button created');
+        console.debug('menu button created');
       } else {
         console.debug('MuiToolbar-regular not found, probably not on relevant page');
       }
     },
 
     createDownloadButton: function() {
+      if (document.getElementById("a++")) return;
+      
       var toolbars = document.getElementsByClassName('MuiToolbar-regular');
       if (toolbars.length == 0) {
         console.log("No toolbar found, can not attach download button");
@@ -1016,32 +1273,29 @@ ${card["notes"].join("<br/>")}
       add_button.textContent = 'Anki++';
       add_button.setAttribute('class', 'homescreen-button cue-button review-due-button onboarding-review-due button-glow');
       add_button.setAttribute('title', 'Add open card to Anki');
+      add_button.setAttribute('id', 'a++');
       add_button.addEventListener('click', Traverse.parseTraverseAndAdd, false);
 
       var anchor = toolbar.getElementsByClassName('MuiButtonBase-root MuiIconButton-root MuiIconButton-colorInherit')[0].parentNode; // homescreen-button')[0].parentNode;
       anchor.appendChild(add_button);
       console.log('download button created');
+      this.createMenu();
     }
 
   };
 
-
-  unsafeWindow.we_are_there = false;
-//   UI.createMenu();
-  function areWeThereYet() {
-    if (document.location.href.indexOf("/Mandarin_Blueprint/") > 0) {
-      if (!unsafeWindow.we_are_there) { 
-        UI.createDownloadButton();
-        console.debug("yay");
-        unsafeWindow.we_are_there = true;
-        UI.createMenu();
-      }
-    } else {
-      unsafeWindow.we_are_there = false;
-      console.debug("nay");
-    }
-  }
-
   console.log("LOADED?!?!");
-  window.setInterval(areWeThereYet, 5000); // occasional check to see if we're in the right spot
+//     // --- MutationObserver (No changes) ---
+    const observerCallback = function(mutationsList, observer) {
+      const avatar = document.getElementsByClassName("MuiAvatar-root MuiAvatar-circular MuiAvatar-colorDefault");
+      const buttonNode = document.getElementById('t2amenu');
+      if (document.location.href.indexOf("/Mandarin_Blueprint/") > 0 && avatar[0]) {
+        if (!buttonNode) { 
+          UI.createDownloadButton();
+        }
+      }
+    };
+    const observer = new MutationObserver(observerCallback);
+    observer.observe(document.body, { childList: true, subtree: true });
+  
 })();
