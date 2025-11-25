@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Traverse Export To Anki
 // @description  Export open Traverse cards to Anki (character or sentence cards)
-// @version      2.3
+// @version      2.3.1
 // @grant        unsafeWindow
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -787,7 +787,7 @@ ${card["notes"].join("<br/>")}
         if (!elm || elm.textContent.indexOf("CLICK HERE") >= 0 || elm.textContent.indexOf("LEVEL") >= 0 || elm.textContent.indexOf("句子") >= 0) {
           console.log("no more elements to add, level done?");
           UI.createFlash("Level/segment done!", 5000);
-          UI.stopAutomation();
+          Traverse.stopAutomation();
           return; // done!
         }
         console.log(`${remaining.length} left, ~ ${remaining.length * delaySeconds} sec. (${remaining.length * delaySeconds / 60} min.)`);
