@@ -87,13 +87,12 @@ That way, you can create the missing production notes yourself with minimal effo
 
 * open a level.
 * click a card (this will be first card to be added)
-* click the T2A menu, click Automagic.
-* It will create all the cards for that level, beginning with the card you have open.
+* click the T2A menu, click Automagic. (click `Stop Auto` to stop the process).
+
+It will create all the cards for that level, beginning with the card you have open.
 
 **Note:** it does not descent into sub-levels/sub-groups, so for Sentences during the foundation levels (13 -> 30), and the sub-levels/sub-groups during Intermediate and beyond, you should navigate to those individually.
 
-**Note 2:** the automation has not yet been tested on Sentence levels, also there's an open issue for handling the newly added Sentence Production cards (en->cn), that are currently not handled correctly.
-It is not recommended to use the automation feature for these parts.
 
 ## Work Flow
 
