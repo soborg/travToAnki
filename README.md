@@ -71,6 +71,18 @@ T2A can extract:
 - MSLK
 - TPV soon'ish? who knows!
 
+## Pro tip for sentences (recall and production)
+
+Mandarin Blueprint added production (EN->CN) notes back in August 2025 for Phases 3 through 5 (at least).
+However, many of the ordinary recall (CN->EN) sentences does not have a corresponding EN->CN sentence.
+If you're a completionist like me, you can simply add the recall sentence twice (it'll show up as a duplicate in Anki) and then:
+- change the note type to `Sentence Note Production` (ctrl+shift+m),
+- change the `SENTENCE` tag to `SENTENCE_PRODUCTION`,
+- move the note to a different deck if you like to split them up (ctrl+d).
+
+That way, you can create the missing production notes yourself with minimal effort.
+
+
 ## Work Flow (automation)
 
 * open a level.
