@@ -106,9 +106,13 @@ It will create all the cards for that level, beginning with the card you have op
 
 ## Work Flow (full level automation)
 
-Essentially same as above, except this *does* descent into sup-levels/sub-groups, but only for Intermediate and beyond.
+- Navigate to a level (intermediate and beyond)
+- Make sure you're on the top-level (you will see many sub-decks: `751-760`, `751-760 V.I.C.`, `761-770`, etc.)
+- Click `T2A` menu, then `Full Level Auto`. (click `Stop Auto` to stop, or refresh browser, you will have to manually create or use the `Automagic` option above to create the remaining cards.
 
-Due to the lag issue with Traverse, it still takes some time to complete. A full level of intermediate takes around an hour, total.
+It's essentially same as above, except this *does* descent into sup-levels/sub-groups, but only for Intermediate and beyond.
+
+Due to the lag issue with Traverse, it still takes some time to complete (~9 seconds between each card). A full level of intermediate takes around an hour, total.
 
 
 ## Work Flow
