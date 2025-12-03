@@ -6,7 +6,7 @@
 - will attempt to create target decks in Anki if it doesn't already exist.
 - Use `AUTO` in the target deck name to let the script autodetect. For example `Master::AUTO` for cards in the `771-780` section of level 42, will put the card into this target deck: `Master::Phase 6 - Intermediate (37-58)::Level 42::771-780`.
 - images should now be properly included for vocab and sentence notes.
-- attempts to self-heal sentences when the keyword is not highlighted in the sentence.
+- attempts to self-heal sentences when the keyword is not highlighted in the sentence. (it'll still be highlighted correctly in Anki)
 - better detection of which parts of the Traverse cards goes into Top-Down Words and Usage sections of the created Anki card.
 - better detection of Production and Recall sentence cards.
 
