@@ -1,5 +1,16 @@
 # What's New
 
+## v2.4 (2025-12-03)
+
+- add full-auto mode for creating cards for a complete level (Intermediate and beyond). Navigate to an Intermediate (or above) level, be sure to stay on the top-level, then use the 'Full Level Auto' to let it collect a complete level.
+- will attempt to create target decks in Anki if it doesn't already exist.
+- Use `AUTO` in the target deck name to let the script autodetect. For example `Master::AUTO` for cards in the `771-780` section of level 42, will put the card into this target deck: `Master::Phase 6 - Intermediate (37-58)::Level 42::771-780`.
+- images should now be properly included for vocab and sentence notes.
+- attempts to self-heal sentences when the keyword is not highlighted in the sentence.
+- better detection of which parts of the Traverse cards goes into Top-Down Words and Usage sections of the created Anki card.
+- better detection of Production and Recall sentence cards.
+
+
 ## V2.3 (2025-11-25)
 
 - Improve automation stability, add a stop button to stop processing further. Delay between each card in this process is up to 12 seconds, to account for Traverse's exceptionally slow loading of note assets/links.
@@ -92,6 +103,12 @@ That way, you can create the missing production notes yourself with minimal effo
 It will create all the cards for that level, beginning with the card you have open.
 
 **Note:** it does not descent into sub-levels/sub-groups, so for Sentences during the foundation levels (13 -> 30), and the sub-levels/sub-groups during Intermediate and beyond, you should navigate to those individually.
+
+## Work Flow (full level automation)
+
+Essentially same as above, except this *does* descent into sup-levels/sub-groups, but only for Intermediate and beyond.
+
+Due to the lag issue with Traverse, it still takes some time to complete. A full level of intermediate takes around an hour, total.
 
 
 ## Work Flow
