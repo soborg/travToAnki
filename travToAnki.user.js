@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Traverse Export To Anki
 // @description  Export open Traverse cards to Anki (character or sentence cards)
-// @version      2.3.1
+// @version      2.4
 // @grant        unsafeWindow
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -9,10 +9,12 @@
 // ==/UserScript==
 
 (function() {
+  var STAGED_CARD = {};
   var SETTINGS = {
     stopAutomationFlag: false,
     DEBUG: false,
     DEFAULTS: {
+      MASTERDECK: "WIP MB Complete",
       MOVIE: {DECK: "Mining", MODEL: "Character Note", TAG: "4-MAKE-A-MOVIE"},
       PROP: {DECK: "Mining", MODEL: "PROP REVIEW", TAG: "1-PROPS"},
       SET: {DECK: "Mining", MODEL: "SET REVIEW", TAG: "3-SETS"},
@@ -54,7 +56,7 @@
     if (elmtext) { elm.textContent = elmtext; }
     return elm
   };
-
+ 
   var ANKI = {
     options: {
       "allowDuplicate": true,
@@ -64,6 +66,44 @@
         "checkChildren": false,
         "checkAllModels": false
       }
+    },
+    
+    getDeckName: function(deckName, cardType) {
+      if (deckName.indexOf("AUTO") < 0) { // no autodetect
+        return deckName;
+      }
+
+      var elms = document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full");
+      var top_elem = elms[0];
+      var splits = top_elem.textContent.split(' - ');
+      var level = splits[0].trim();
+      var phase = splits[1].trim();
+
+      var deckParts = [];
+      if (['Intermediate', '中级课程', 'Upper-Intermediate', '高中级课程', 'Advanced Course', '高级课程'].includes(phase)) {  // Level 37 - Intermediate
+        if (phase == "Intermediate" || phase == "中级课程") { phase = "Phase 6 - Intermediate (37-58)"; }
+        if (phase == "Upper-Intermediate" || phase == "高中级课程") { phase = "Phase 7 - Upper Intermediate (59-67)"; }
+        if (phase == "Advanced Course" || phase == "高级课程") { phase = "Phase 8 - Advanced (68-88)"; }
+
+        subSection = elms[1].textContent.split('#')[1]; //       Level 37 汉字 #601 - 610;
+        if (elms[1].textContent.includes("Vocab in Context") || elms[1].textContent.includes("语境") || elms[1].textContent.includes("V.I.C.") ) {   // Level 37 Vocab in Context #593 - 600       58级 - 语境. # 1531 - 1540
+         	subSection += " - Vocab In Context";
+        }
+        var deckParts = [phase, level, subSection];
+      } else if (['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4', 'Phase 5'].includes(phase)) {
+        var subSection = 'Course'; // default for most
+        if (cardType == "sentence") {
+        	 subSection = 'Sentence';
+        }
+        if (cardType == "sentence_production") {
+        	 subSection = 'Sentence Production';
+        }
+      	deckParts = [phase, level, subSection];
+      }
+
+      deckName = deckName.replace("AUTO", deckParts.join("::"));
+//       var deckName = `${SETTINGS.DEFAULTS.MASTERDECK}::${phase}::${level}::${subSection}`;
+			return deckName;
     },
 
     generateUID: function() {
@@ -76,11 +116,13 @@
     
     createSentence: function(card) {
       var targetDeck = unsafeWindow.localStorage.getItem("sentenceDeck") || SETTINGS.DEFAULTS.SENTENCE.DECK;
+      targetDeck = this.getDeckName(targetDeck, card["type"]);
       var pictures = [];
       var audio_fields = [];
       var modelName = SETTINGS.DEFAULTS.SENTENCE.MODEL;
       var noteTag = "SENTENCE";
       var tags = card['tags'];
+      card["word"] = card["word"] || card["characters"].join("") ;
       tags.push(noteTag);
 
       var fields = {
@@ -96,6 +138,25 @@
         fields["Sentence"] = fields["Sentence"].replace(card["word"], `<span style="background-color: rgb(90, 131, 0);">${card["word"]}</span>`);
       }
 
+      card["images"].forEach(image_url => {
+        var split_fields = image_url.split("/");
+        var filename = split_fields[split_fields.length-1].split('?')[0];
+        if (filename.length > 36) {
+          var dot_splits = filename.split('.');
+          var ext = dot_splits[dot_splits.length-1];
+          filename = tags[0] + "-" + this.generateUID(filename) + '.' + ext;
+        }
+
+        pictures.push({
+          "url": image_url,
+          "filename": filename,
+          "skipHash": "",
+          "fields": [
+            "Image"
+          ]
+	      });
+      });
+      
       card["audio"].forEach(a => {
         var split_fields = a.split("/");
         var filename = split_fields[split_fields.length-1];
@@ -126,6 +187,8 @@
 
     createSentenceProduction: function(card) {
       var targetDeck = unsafeWindow.localStorage.getItem("sentenceProductionDeck") || SETTINGS.DEFAULTS.SENTENCE_PRODUCTION.DECK;
+      targetDeck = this.getDeckName(targetDeck, card["type"]);
+
       var pictures = [];
       var audio_fields = [];
       var modelName = SETTINGS.DEFAULTS.SENTENCE_PRODUCTION.MODEL;
@@ -223,6 +286,8 @@
 
     createProp: function(card) {
       var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || SETTINGS.DEFAULTS.PROP.DECK;
+      targetDeck = this.getDeckName(targetDeck, card["type"]);
+
       var tags = card['tags'];
       var prop = `${card["notes"].join("<br/>")}`;
       var fields = {
@@ -250,6 +315,8 @@
     
     createSet: function(card) {
       var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || SETTINGS.DEFAULTS.SET.DECK;
+      targetDeck = this.getDeckName(targetDeck, card["type"]);
+
       var tags = card['tags'];
       var set = `${card["notes"].join("<br/>")}`;
       var fields = {
@@ -258,7 +325,7 @@
         "SOURCE LESSON": card["source lesson"] || "",
       };
       var modelName = SETTINGS.DEFAULTS.SET.MODEL;
-      var noteTag = SETTINGS.DEFAULTS.SET.TAG;
+      var noteTag = SETTINGS.DEFAULTS.SET.TAG; // "3-SETS";
       tags.push(noteTag);
 
       var params = {
@@ -277,6 +344,8 @@
     
     createActor: function(card) {
       var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || SETTINGS.DEFAULTS.ACTOR.DECK;
+      targetDeck = this.getDeckName(targetDeck, card["type"]);
+
       var tags = card['tags'];
       var actor = `${card["notes"].join("<br/>")}`;
       var fields = {
@@ -285,7 +354,7 @@
         "SOURCE LESSON": card["source lesson"] || "",
       };
       var modelName = SETTINGS.DEFAULTS.ACTOR.MODEL;
-      var noteTag = SETTINGS.DEFAULTS.ACTOR.TAG;
+      var noteTag = SETTINGS.DEFAULTS.ACTOR.TAG; // "2-ACTORS";
       tags.push(noteTag);
 
       var params = {
@@ -304,20 +373,39 @@
     
     createWordConnection: function(card) {
       var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || SETTINGS.DEFAULTS.WORDCONNECTION.DECK;
+      targetDeck = this.getDeckName(targetDeck, card["type"]);
+
       var tags = card['tags'];
       var livedexperience = `${card["notes"].join("<br/>")}`;
       var audio_fields = [];
+      var pictures = [];
       var fields = {
         WORD: card["hanzi"],
         PINYIN: card["pinyin"],
         MEANING: card["keyword"],
-        IMAGE: "()",
+//        IMAGE: "()",
         "LIVED EXPERIENCE": livedexperience,
         "SOURCE LESSON": card["source lesson"] || "",
       };
+
+      if (card["images"].length == 0) {
+        fields["IMAGE"] = "()";
+      }
+
       var modelName = SETTINGS.DEFAULTS.WORDCONNECTION.MODEL;
       var noteTag = SETTINGS.DEFAULTS.WORDCONNECTION.TAG;
       tags.push(noteTag);
+
+      card["images"].forEach(image_url => {
+        pictures.push({
+          "url": image_url,
+          "filename": `image_wordconnection_${card["hanzi"]}`,
+          "skipHash": "",
+          "fields": [
+            "IMAGE"
+          ]
+	      });
+      });
 
       card["audio"].forEach(a => {
         var split_fields = a.split("/");
@@ -337,7 +425,7 @@
             "options": this.options,
             "tags": tags,
             "audio": audio_fields,
-            "picture": []
+            "picture": pictures
         }
       }
       return params;
@@ -345,8 +433,10 @@
 
     createCharacter: function(card) {
       var targetDeck = unsafeWindow.localStorage.getItem("miningDeck") || SETTINGS.DEFAULTS.MOVIE.DECK;
+      targetDeck = this.getDeckName(targetDeck, card["type"]);
+
       var modelName = SETTINGS.DEFAULTS.MOVIE.MODEL;
-      var noteTag = SETTINGS.DEFAULTS.MOVIE.TAG;
+      var noteTag = SETTINGS.DEFAULTS.MOVIE.TAG; // "4-MAKE-A-MOVIE";
       var tags = card['tags'];
       var audio_fields = [];
       var pictures = [];
@@ -429,8 +519,9 @@ ${card["notes"].join("<br/>")}
         }
       }
       return params;
-    },
 
+    },
+    
     createConvoConnector: function(card) {
       var targetDeck = unsafeWindow.localStorage.getItem("convoDeck") || SETTINGS.DEFAULTS.CONVOCON.DECK; // "Conversation Connectors";
       var modelName = SETTINGS.DEFAULTS.CONVOCON.MODEL; // "MB CONVOCON REVIEW";
@@ -476,10 +567,9 @@ ${card["notes"].join("<br/>")}
       }
       return params;
     },
-    
+
     createAnkiNote: function(card) {
       var note;
-
       if (card["type"] == "convo_connector") {
         note = this.createConvoConnector(card);
       }
@@ -512,12 +602,22 @@ ${card["notes"].join("<br/>")}
       if (note) {
         console.log(card);
         console.log(note);
-        if (!SETTINGS.debug) {
-	        return this.anki_invoke('addNote', 6, note).then(result => { UI.createFlash("Added!"); });
+        if (SETTINGS.DEBUG == false) {
+          var deckParams = {"deck": note['note']['deckName']};
+          return this.anki_invoke('createDeck', 6, deckParams).then(res => {
+            console.log(res);
+            return this.anki_invoke('addNote', 6, note).then(result => { UI.createFlash(`Added in (${note["note"]["deckName"]})`); });
+          });
         }
       } else {
         console.error("could not create note, type not recognized");
       }
+    },
+    
+    getAnkiDecks: function() {
+      this.anki_invoke('deckNames', 6).then(result => {
+        console.log(`got list of decks: ${result}`);
+      });
     },
 
     anki_invoke: function(action, version, params={}) {
@@ -553,7 +653,8 @@ ${card["notes"].join("<br/>")}
   };
 
   var Traverse = {
-    
+    automationQueue: [],
+
     attachCardType: function(card, children) {
       var graph_elements = document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full");
       if (graph_elements[0].textContent.indexOf("TPV - ") >= 0) {
@@ -597,7 +698,7 @@ ${card["notes"].join("<br/>")}
           else if (toplevel_h2[0].getElementsByClassName("highlight-review").length > 0 || toplevel_h2[0].textContent.indexOf("。") > 0){
             card['type'] = 'sentence';
           } else {
-            if (toplevel_h2[0].textContent.match(/[A-Za-z]/g).length > 3) {
+            if (toplevel_h2[0].textContent && toplevel_h2[0].textContent.match(/[A-Za-z]/g) && toplevel_h2[0].textContent.match(/[A-Za-z]/g).length > 3) {
 	            card['type'] = 'sentence_production';
             } else {
               card['type'] = 'sentence';
@@ -635,11 +736,11 @@ ${card["notes"].join("<br/>")}
         var child = children[idx];
 
         if (child.textContent.startsWith("English phrase:")) {
-          card["englishPhrase"] = this.cleanText(children[idx+1].textContent);
+          card["englishPhrase"] = this.cleanText(children[idx+1].textContent); // .trim();
         }
         else if (child.textContent.startsWith("Chinese phrase:")) {
-          card["chinesePhrase"] = this.cleanText(children[idx+1].textContent);
-          card["pinyin"] = this.cleanText(children[idx+2].textContent);
+          card["chinesePhrase"] = this.cleanText(children[idx+1].textContent); // .trim();
+          card["pinyin"] = this.cleanText(children[idx+2].textContent); // .replace("Your browser does not support the audio element.", "").trim();
         }
         else {
           this.attachAudio(card, child);
@@ -664,11 +765,17 @@ ${card["notes"].join("<br/>")}
         var child = children[idx];
 
         if (child.textContent.startsWith("English")) {
-          card["english"] = this.cleanText(children[idx+1].textContent);
+          card["english"] = this.cleanText(children[idx+1].textContent); // .replace("Your browser does not support the audio element.", "").trim();
         }
         else if (child.textContent.startsWith("Chinese")) {
-          card["pinyin"] = this.cleanText(children[idx+2].textContent);
-          var phrase = this.cleanText(children[idx+1].textContent);
+          card["pinyin"] = this.cleanText(children[idx+2].textContent); // .replace("Your browser does not support the audio element.", "").trim();
+          var phrase = this.cleanText(children[idx+1].textContent); // .replace("Your browser does not support the audio element.", "").trim()
+//           if (phrase.indexOf("Phrase #") >= 0) {
+//             console.log(phrase);
+//             var phraseNum = phrase.split("Phrase #")[1].trim();
+//             var phrase = phrase.split("Phrase #")[0].trim();
+//             card["tags"].push(`Phrase#${phraseNum}`);
+//           }
           card["sentence"] = phrase;
         }
         else if (child.textContent.startsWith("Phrase #")) {
@@ -687,7 +794,7 @@ ${card["notes"].join("<br/>")}
       var htmlchildren = document.getElementsByClassName("ProseMirror")[0].children;
       var children = [];
       for (var child of htmlchildren) {
-        if (!child.textContent) { continue }
+        if (child.tagName != "H2" && !child.textContent) { continue }
         children.push(child);
       }
 
@@ -746,37 +853,63 @@ ${card["notes"].join("<br/>")}
         ANKI.createAnkiNote(card);
       }
     },
-    
+
     enqueueLevel: function() {
-     	var queue = [];
+     	Traverse.automationQueue.length = 0;
       var elms = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"));
-			for (var e of elms) {
-        if (e.textContent.indexOf(" - 汉字") >= 0 || e.textContent.indexOf(" - 句子") >= 0) {
-          queue.push(e);
+			for (var idx in elms) {
+				idx = parseInt(idx);
+        var e = elms[idx];
+        if (e.textContent.includes(" 汉字") || e.textContent.includes(" 句子") || e.textContent.includes(" Vocab In Context") || e.textContent.includes("V.I.C") ) {
+          Traverse.automationQueue.push(idx);
         }
       }
+      console.log(Traverse.automationQueue);
+			window.setTimeout(() => { console.log("continuing"); Traverse.continueAutomation(); }, 2000);
+    },
 
-      queue[0].click();
-      console.log('asdasd');
-      window.setTimeout(() => {console.log("calling"); Traverse.automateLevel(); }, 3000);
+    continueAutomation: function() {
+      if (Traverse.automationQueue.length > 0) {
+        var elm_pointer = Traverse.automationQueue[0];
+        Traverse.automationQueue = Traverse.automationQueue.slice(1, Traverse.automationQueue.length);
+        var next_elm = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"))[elm_pointer];
+
+        next_elm.click();
+        console.log(Traverse.automationQueue);
+        window.setTimeout(() => { console.log("calling"); Traverse.automateLevel(); }, 3000);
+      } else {
+        console.log("automation queue is empty, done!");
+      }
+    },
+
+    navigateTopLevel: function() {
+      var toplevel = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"))[0];
+      toplevel.click();
     },
 
     automateLevel: function() {
-      console.log("hello");
+      console.log("hello auto");
 			SETTINGS.stopAutomationFlag = false;
 			UI.createStopButton();
 
       function doit(pointer) {
-        var delaySeconds = 12;
+        var delaySeconds = 9;
         console.log("moving pointer?", pointer);
         console.log("stopping?", SETTINGS.stopAutomationFlag);
+
+        var ahrefs = document.getElementsByClassName("ProseMirror")[0].getElementsByTagName("a");
+				var unresolved = Array.from(ahrefs).filter(a => a.textContent.includes("Mandarin_Blueprint/"));
+      	if (unresolved.length > 0) {
+          console.log("not all links are resolved: ", unresolved);
+	        window.setTimeout(() => { doit(pointer); }, 1000);
+          return;
+      	}
+
         Traverse.parseTraverseAndAdd(); // collect open card
 
 				var elms = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"))
         var elm = elms[pointer];
         var remaining = elms.slice(pointer, elms.length);
-        
-        console.log(elm);
 
         if (SETTINGS.stopAutomationFlag == true) {
           UI.createFlash("Automation aborted", 9000);
@@ -786,14 +919,21 @@ ${card["notes"].join("<br/>")}
 
         if (!elm || elm.textContent.indexOf("CLICK HERE") >= 0 || elm.textContent.indexOf("LEVEL") >= 0 || elm.textContent.indexOf("句子") >= 0) {
           console.log("no more elements to add, level done?");
-          UI.createFlash("Level/segment done!", 5000);
-          Traverse.stopAutomation();
-          return; // done!
+					if (Traverse.automationQueue.length > 0) {
+            UI.createFlash("segment done, continuing soon!", 5000);
+            Traverse.stopAutomation();
+            Traverse.navigateTopLevel();
+            window.setTimeout(() => { console.log("continuing automation"); Traverse.continueAutomation(); }, 2000);
+          } else {
+	          UI.createFlash("Level/segment done!", 5000);
+          	Traverse.stopAutomation();
+          }
+          return;
         }
         console.log(`${remaining.length} left, ~ ${remaining.length * delaySeconds} sec. (${remaining.length * delaySeconds / 60} min.)`);
 
         if (elm.textContent.indexOf("PROP") >= 0) {
-          delaySeconds = 6;
+          delaySeconds = 3;
         }
 
         elm.click();
@@ -817,7 +957,8 @@ ${card["notes"].join("<br/>")}
         idx = parseInt(idx);
         var elm = elms[idx];
 
-        if ((elm.textContent.indexOf(" - 汉字") >= 0 || elm.textContent.indexOf(" - 句子") >= 0 ) && elm.parentNode.parentNode.style['border-color'].split(" rgb")[2] == selectedStyle) { // it's the next one lol
+        if ((elm.textContent.includes(" 汉字") || elm.textContent.includes(" - 句子") || elm.textContent.includes(" Vocab in Context") || elm.textContent.includes("V.I.C."))
+            && elm.parentNode.parentNode.style['border-color'].split(" rgb")[2] == selectedStyle) { // it's the next one lol
           idx++;
           break;
         }
@@ -827,12 +968,12 @@ ${card["notes"].join("<br/>")}
           break;
         }
       }
-      UI.createFlash(`Automation begun! (~ ${elms.slice(idx, elms.length).length * 12 / 60} min)`, 8000);
+      UI.createFlash(`Automation begun! (~ ${elms.slice(idx, elms.length).length * 9 / 60} min)`, 8000);
 
       elm = elms[idx];
       idx++;
       elm.click();
-      window.setTimeout((pointer) => {doit(pointer)}, 12000, idx+1);
+      window.setTimeout((pointer) => {doit(pointer)}, 9000, idx+1);
 
     },
 
@@ -871,28 +1012,53 @@ ${card["notes"].join("<br/>")}
       }
     },
 
+    attachImages: function(card, child) {
+      var edit_fields = document.getElementsByClassName("group/editor");
+      for (var elm of edit_fields) {
+        if (elm.getAttribute('id').toLowerCase().indexOf("field-image") > 0) {
+          for (var img of elm.getElementsByTagName("img")) {
+            card['images'].push(img.getAttribute('src'));
+          }
+        }
+
+        if (elm.getAttribute('id').toLowerCase().indexOf("field-picture") > 0) {
+          for (var img of elm.getElementsByTagName("img")) {
+            card['images'].push(img.getAttribute('src'));
+          }
+        }
+        
+        if (elm.getAttribute('id').toLowerCase().indexOf("field-personal") > 0) {
+          for (var img of elm.getElementsByTagName("img")) {
+            card['images'].push(img.getAttribute('src'));
+          }
+        }
+      } 
+    },
+
     parseSentence: function(card, children) {
       var card = {
-        'type': "sentence",
-        'hanzi': '',
-        'english': '',
-        'keyword': null,
-        'audio': [],
-        'notes': [],
-        'usage': [],
-        'characters': [],
-        'source lesson': null,
-        'tags': card["tags"],
-        'top-down': [],
-        'word': ""
+        type: "sentence",
+        hanzi: '',
+        english: '',
+        keyword: null,
+        audio: [],
+        notes: [],
+        usage: [],
+        characters: [],
+        "source lesson": null,
+        tags: card["tags"],
+        "top-down": [],
+        images: [],
+        word: ""
       };
 
+      var top_level = document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full")[0];
 
       for (var idx in children) {
         var idx = parseInt(idx);
         var child = children[idx];
         if (child.tagName == "P" && child.textContent.length > 3 && child.children.length == 0) {
-          if (child.textContent.indexOf("用法") >= 0) { // this crap seems to appear during intermediate+
+          if (child.textContent.indexOf("用法") >= 0 && card["usage"].indexOf(child.textContent) < 0) { // this crap seems to appear during intermediate+
             card["usage"].push(child.textContent);
           } else {
             if (child.textContent.match(/^\d\./) || child.textContent.match(/^"/)) { // sometimes usage parts start with <number><dot> or " , which seem unique to this field
@@ -908,7 +1074,9 @@ ${card["notes"].join("<br/>")}
 
         if (child.tagName == "H2" && idx == 0) {
           card["hanzi"] = child.textContent;
-          if (children[idx+1].tagName == "P" && children[idx+1].textContent.length > 0) {  // for dialogues, the siblings are sometimes P-tags
+          if (children[1].tagName == "P" && children[1].textContent.length > 0) {  // for dialogues, the siblings are sometimes P-tags
+            console.log("oh no");
+            console.log(children);
             card["hanzi"] += children[idx+1].textContent;
           }
 
@@ -922,9 +1090,16 @@ ${card["notes"].join("<br/>")}
           }
         }
         else if (child.tagName == "H2" && idx > 0) { // it's the english phrase
+          if (top_level.textContent.indexOf("Intermediate") > 0 && children[idx+1].textContent.length > 0) {
+            card["usage"].push(children[idx+1].textContent);
+          }
+
           card["english"] = child.textContent;
+// 					console.log(children[idx+2]);
+//           console.log(children[idx+3]);
           if (children[idx+2].textContent.length > 3) {   // .. and a short text explaining the usage, if any
           	card["usage"].push(children[idx+2].textContent);
+
             if (children[idx+3].tagName == "P" && this.cleanText(children[idx+3].textContent).length > 0) {
               card["usage"].push(this.cleanText(children[idx+3].textContent));
             }
@@ -932,9 +1107,16 @@ ${card["notes"].join("<br/>")}
         }
 
         else if (child.textContent.startsWith("Characters:")) {
-          for (var propelm of child.children) {
-            if (!propelm.textContent || propelm.textContent == "Characters:") { continue }
-            var textContent = propelm.textContent.trim();
+          var siblings = [child];
+          let nextSibling = child.nextElementSibling;
+          while (nextSibling) {
+            if (nextSibling.tagName == "P") { siblings.push(nextSibling); }
+              nextSibling = nextSibling.nextElementSibling;
+          }
+
+          for (var propelm of siblings) {
+//             if (!propelm.textContent || propelm.textContent == "Characters:") { continue }
+            var textContent = propelm.textContent.replace("Characters:", "").trim();
             if (textContent == "Untitled") {
               var splits = propelm.getElementsByTagName('a')[0].getAttribute("href").split("/");
               textContent = splits[splits.length-1];
@@ -946,6 +1128,8 @@ ${card["notes"].join("<br/>")}
           this.attachAudio(card, child);
         }
       }
+
+			this.attachImages(card);
       this.attachNotes(card);
       return card;
     },
@@ -957,11 +1141,12 @@ ${card["notes"].join("<br/>")}
 	    while (nextSibling) {
 		    if (nextSibling.tagName != "P" || (nextSibling.tagName == "P" && nextSibling.getElementsByTagName("span").length > 0)) { break } // it's not a relevant tag, or has nested tags (probably audio)
 		    if (nextSibling.tagName == "P") { siblings.push(nextSibling); }
+//	        console.log(nextSibling); // Outputs each next sibling element
 	        nextSibling = nextSibling.nextElementSibling;
 	    }
 	    return siblings;
     },
-
+    
     parseSentenceProduction: function(card, children) {
       var card = {
         'type': "sentence_production",
@@ -992,18 +1177,19 @@ ${card["notes"].join("<br/>")}
         }
         else if (child.tagName == "H2" && idx > 0) { // it's the chinese phrase
           card["hanzi"] = child.textContent;
-          
+          var siblings = this.getSiblings(child);
+
           if (children[idx+1].textContent.length > 0) {
             if (children[idx+1].getElementsByTagName("mark")[0]) {
               card["hanzi"] += children[idx+1].textContent;
               if (this.cleanText(children[idx+2].textContent).length > 0) {
-              	card["top-down"].push(this.cleanText(children[idx+2].textContent));
+              	card["top-down"].push(this.cleanText(children[idx+2].textContent)); // .replace("Your browser does not support the audio element.", "").trim()); // these elements are usually top-down words
               }
             } else {
               if (this.cleanText(children[idx+1].textContent).length > 0) {
 								console.log(children[idx+1].textContent);
                 console.log(this.cleanText(children[idx+1].textContent));
-              	card["top-down"].push(this.cleanText(children[idx+1].textContent));
+              	card["top-down"].push(this.cleanText(children[idx+1].textContent)); // .replace("Your browser does not support the audio element.", "").trim()); // these elements are usually top-down words
               }
             }
           }
@@ -1028,6 +1214,15 @@ ${card["notes"].join("<br/>")}
     },
     
     parseProp: function(card, children) {
+      var card = {
+        'type': card['type'],
+        'component': null,
+        'tags': card['tags'],
+        'notes': [],
+        'images': [],
+        'source lesson': null,
+      };
+      
       for (var child of children) {
         if (child.textContent.startsWith("Pick a prop for")) { card["component"] = child.textContent.split("Pick a prop for")[1].trim(); }
       }
@@ -1038,7 +1233,8 @@ ${card["notes"].join("<br/>")}
             card['notes'].push(elm.textContent);
           }
           for (var img of elm.getElementsByTagName("img")) {
-            console.log(img.getAttribute('src'));
+            card['images'].push(img.getAttribute('src'));
+//             console.log(img.getAttribute('src'));
           }
         }
       }
@@ -1076,12 +1272,26 @@ ${card["notes"].join("<br/>")}
     },
     
     parseWordConnection: function(card, children) {
+      var card = {
+        'type': card["type"],
+        'hanzi': null,
+        'keyword': null,
+        'pinyin': null,
+        'audio': [],
+        'notes': [],
+        'images': [],
+        'tags': card["tags"],
+      };
       for (var idx in children) {
         idx = parseInt(idx);
         var child = children[idx];
         
-        if (child.textContent.startsWith("Meaning") || child.textContent.startsWith("English")) { card["keyword"] = children[idx+1].textContent; }
-        else if (child.textContent.startsWith("Pinyin")) { card["pinyin"] = children[idx+1].textContent; }
+        if (child.textContent.startsWith("Meaning") || child.textContent.startsWith("English")) {
+          card["keyword"] = children[idx+1].textContent;
+        }
+        else if (child.textContent.startsWith("Pinyin")) {
+          card["pinyin"] = children[idx+1].textContent;
+        }
         else if (child.textContent.startsWith("Word connection:")) {
           card["hanzi"] = child.textContent.split("Word connection:")[1].trim();
         }
@@ -1092,14 +1302,20 @@ ${card["notes"].join("<br/>")}
           this.attachAudio(card, child);
         }
       }
-      var edit_fields = document.getElementsByClassName("group/editor")
+      var edit_fields = document.getElementsByClassName("group/editor");
       for (var elm of edit_fields) {
         if (elm.textContent && elm.getAttribute('id').toLowerCase().indexOf("field-lived") > 0) {
           if (elm.textContent.length > 0) {
             card['notes'].push(elm.textContent);
           }
         }
+        if (elm.getAttribute('id').toLowerCase().indexOf("field-image") > 0) {
+          for (var img of elm.getElementsByTagName("img")) {
+            card['images'].push(img.getAttribute('src'));
+          }
+        }
       }
+
       return card;
     },
     
@@ -1152,7 +1368,7 @@ ${card["notes"].join("<br/>")}
       } else {
       	add_button.setAttribute("class", "homescreen-button learn-mode-button-container add-to-reviews-button-container");
       }
-      add_button.setAttribute("style", "padding-right: 5px; padding-left: 5px; position: absolute; right: 0px; top: 58px; max-width: 300px; cursor: default; min-height: 50px; height: fit-content;");
+      add_button.setAttribute("style", "padding-right: 5px; padding-left: 5px; position: absolute; right: 0px; top: 58px; max-width: 400px; cursor: default; min-height: 50px; height: fit-content;");
       var anchor = toolbar.getElementsByClassName('homescreen-button')[0].parentNode;
       anchor.appendChild(add_button);
 
@@ -1167,6 +1383,7 @@ ${card["notes"].join("<br/>")}
       if (!miningDeck) {
         miningDeck = def;
       }
+      ANKI.getAnkiDecks();
       var deck = prompt("Enter deck name (make sure it exists!)", miningDeck);
       if (!deck) {
         deck = miningDeck;
@@ -1223,7 +1440,7 @@ ${card["notes"].join("<br/>")}
       outer_div.appendChild(inner_div);
 
       var scrape_card = document.createElement('a');
-      scrape_card.setAttribute('title', 'Set Character Deck');
+      scrape_card.setAttribute('title', 'Set Character Deck (also used for props, actors, sets)');
       scrape_card.textContent = 'Character Deck Name';
       scrape_card.addEventListener('click', () => { UI.setDeckName("miningDeck", SETTINGS.DEFAULTS.MOVIE.DECK);}, false);
       inner_div.appendChild(scrape_card);
@@ -1246,6 +1463,12 @@ ${card["notes"].join("<br/>")}
       auto.addEventListener('click', Traverse.automateLevel, false);
       inner_div.appendChild(auto);
 
+      var auto = document.createElement('a');
+      auto.setAttribute('title', 'Automate a full level (Intermediate and up). Open the level, be on the top-level and click this!');
+      auto.textContent = 'Full Level Auto';
+      auto.addEventListener('click', Traverse.enqueueLevel, false);
+      inner_div.appendChild(auto);
+
       var toolbars = document.getElementsByClassName('MuiToolbar-regular');
       if (toolbars.length > 0) {
         toolbar = toolbars[0];
@@ -1255,6 +1478,7 @@ ${card["notes"].join("<br/>")}
       } else {
         console.debug('MuiToolbar-regular not found, probably not on relevant page');
       }
+
     },
 
     createDownloadButton: function() {
@@ -1285,7 +1509,8 @@ ${card["notes"].join("<br/>")}
   };
 
   console.log("LOADED?!?!");
-//     // --- MutationObserver (No changes) ---
+  
+  
     const observerCallback = function(mutationsList, observer) {
       const avatar = document.getElementsByClassName("MuiAvatar-root MuiAvatar-circular MuiAvatar-colorDefault");
       const buttonNode = document.getElementById('t2amenu');
