@@ -1,5 +1,9 @@
 # What's New
 
+## v2.4.1 (2025-12-07)
+- \[full auto mode\]  sentence lists named, 语境. (e.g. `58级 - 语境. # 1531 - 1540`) are now correctly identified and enqueued.
+- 
+
 ## v2.4 (2025-12-03)
 
 - add full-auto mode for creating cards for a complete level (Intermediate and beyond). Navigate to an Intermediate (or above) level, be sure to stay on the top-level, then use the 'Full Level Auto' to let it collect a complete level.
