@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Traverse Export To Anki
 // @description  Export open Traverse cards to Anki (character or sentence cards)
-// @version      2.4
+// @version      2.4.1
 // @grant        unsafeWindow
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -860,7 +860,7 @@ ${card["notes"].join("<br/>")}
 			for (var idx in elms) {
 				idx = parseInt(idx);
         var e = elms[idx];
-        if (e.textContent.includes(" 汉字") || e.textContent.includes(" 句子") || e.textContent.includes(" Vocab In Context") || e.textContent.includes("V.I.C") ) {
+        if (e.textContent.includes(" 汉字") || e.textContent.includes(" 句子") || e.textContent.includes(" Vocab In Context") || e.textContent.includes("V.I.C") || e.textContent.includes("语境") ) {
           Traverse.automationQueue.push(idx);
         }
       }
