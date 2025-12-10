@@ -85,10 +85,14 @@
         if (phase == "Upper-Intermediate" || phase == "高中级课程") { phase = "Phase 7 - Upper Intermediate (59-67)"; }
         if (phase == "Advanced Course" || phase == "高级课程") { phase = "Phase 8 - Advanced (68-88)"; }
 
-        subSection = elms[1].textContent.split('#')[1]; //       Level 37 汉字 #601 - 610;
-		if (subSection === undefined) {
-          subSection = elms[1].textContent.split(' 句子 -')[1].trim();
-	    }
+        if (elms[1].textContent.includes("# -") ) {
+          subSection = elms[1].textContent.split('# -')[1].trim(); //       Level 62 汉字 # - 601 - 610
+        } else if (elms[1].textContent.includes("#") ) {
+          subSection = elms[1].textContent.split('#')[1].trim(); //       Level 37 汉字 #601 - 610
+        }
+        if (elms[1].textContent.includes('句子 -') ) {
+          subSection = elms[1].textContent.split('句子 -')[1].trim();
+        }
         if (elms[1].textContent.includes("Vocab in Context") || elms[1].textContent.includes("语境") || elms[1].textContent.includes("V.I.C.") || elms[1].textContent.includes("句子") ) {   // Level 37 Vocab in Context #593 - 600       58级 - 语境. # 1531 - 1540
          	subSection += " - Vocab In Context";
         }
