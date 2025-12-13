@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Traverse Export To Anki
 // @description  Export open Traverse cards to Anki (character or sentence cards)
-// @version      2.4.1
+// @version      2.4.4
 // @grant        unsafeWindow
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -80,37 +80,27 @@
       var phase = splits[1].trim();
 
       var deckParts = [];
-      if (['Intermediate', '中级课程', 'Upper-Intermediate', '高中级课程', 'Advanced Course', '高级课程'].includes(phase)) {  // Level 37 - Intermediate
+      if (['Intermediate', '中级课程', 'Upper-Intermediate', '高中级课程', 'Advanced Course', '高级课程', 'Advanced Course 高级课程'].includes(phase)) {
         if (phase == "Intermediate" || phase == "中级课程") { phase = "Phase 6 - Intermediate (37-58)"; }
         if (phase == "Upper-Intermediate" || phase == "高中级课程") { phase = "Phase 7 - Upper Intermediate (59-67)"; }
-        if (phase == "Advanced Course" || phase == "高级课程") { phase = "Phase 8 - Advanced (68-88)"; }
+        if (phase.includes("Advanced Course") || phase.includes("高级课程") ) { phase = "Phase 8 - Advanced (68-88)"; }
 
-        if (elms[1].textContent.includes("# -") ) {
-          subSection = elms[1].textContent.split('# -')[1].trim(); //       Level 62 汉字 # - 601 - 610
-        } else if (elms[1].textContent.includes("#") ) {
-          subSection = elms[1].textContent.split('#')[1].trim(); //       Level 37 汉字 #601 - 610
-        }
-        if (elms[1].textContent.includes('句子 -') ) {
-          subSection = elms[1].textContent.split('句子 -')[1].trim();
-        }
+        subSection = elms[1].textContent.match(/[0-9]+\s-\s[0-9]+$/)[0];
         if (elms[1].textContent.includes("Vocab in Context") || elms[1].textContent.includes("语境") || elms[1].textContent.includes("V.I.C.") || elms[1].textContent.includes("句子") ) {   // Level 37 Vocab in Context #593 - 600       58级 - 语境. # 1531 - 1540
-         	subSection += " - Vocab In Context";
+          subSection += " - Vocab In Context";
         }
-        var deckParts = [phase, level, subSection];
       } else if (['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4', 'Phase 5'].includes(phase)) {
         var subSection = 'Course'; // default for most
         if (cardType == "sentence") {
-        	 subSection = 'Sentence';
+          subSection = 'Sentence';
         }
         if (cardType == "sentence_production") {
-        	 subSection = 'Sentence Production';
+          subSection = 'Sentence Production';
         }
-      	deckParts = [phase, level, subSection];
       }
-
+      deckParts = [phase, level, subSection];
       deckName = deckName.replace("AUTO", deckParts.join("::"));
-//       var deckName = `${SETTINGS.DEFAULTS.MASTERDECK}::${phase}::${level}::${subSection}`;
-			return deckName;
+      return deckName;
     },
 
     generateUID: function() {
