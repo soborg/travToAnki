@@ -1,8 +1,12 @@
-# What's New
+# Changelog
+
+## V2.4.4 (2025-12-13)
+- more stable deck name auto-generation.
+
 
 ## v2.4.1 (2025-12-07)
 - \[full auto mode\]  sentence lists named, 语境. (e.g. `58级 - 语境. # 1531 - 1540`) are now correctly identified and enqueued.
-- 
+
 
 ## v2.4 (2025-12-03)
 
