@@ -80,6 +80,7 @@
       var phase = splits[1].trim();
 
       var deckParts = [];
+	  var subSection = '';
       if (['Intermediate', '中级课程', 'Upper-Intermediate', '高中级课程', 'Advanced Course', '高级课程', 'Advanced Course 高级课程'].includes(phase)) {
         if (phase == "Intermediate" || phase == "中级课程") { phase = "Phase 6 - Intermediate (37-58)"; }
         if (phase == "Upper-Intermediate" || phase == "高中级课程") { phase = "Phase 7 - Upper Intermediate (59-67)"; }
@@ -90,7 +91,7 @@
           subSection += " - Vocab In Context";
         }
       } else if (['Phase 1', 'Phase 2', 'Phase 3', 'Phase 4', 'Phase 5'].includes(phase)) {
-        var subSection = 'Course'; // default for most
+        subSection = 'Course'; // default for most
         if (cardType == "sentence") {
           subSection = 'Sentence';
         }
