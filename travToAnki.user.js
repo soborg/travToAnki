@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Traverse Export To Anki
 // @description  Export open Traverse cards to Anki (character or sentence cards)
-// @version      2.4.4
+// @version      2.4.5
 // @grant        unsafeWindow
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -1427,6 +1427,8 @@ ${card["notes"].join("<br/>")}
       button.textContent = 'T2A';
       button.setAttribute("id", "t2amenu");
       button.classList.toggle('homescreen-button');
+      button.classList.toggle('text-black');
+      button.classList.toggle('dark:text-white');
       button.classList.toggle('dropbtn');
       button.setAttribute('title', 'Traverse 2 Anki Settings');
       button.addEventListener('click', this.myDropdown, false);
