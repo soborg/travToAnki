@@ -49,18 +49,6 @@ Use `My MB::AUTO` to let it automatically create decks under the `My MB` master 
 Decks will be created automatically if they do not already exist.
 
 
-## Pro tip for sentences (recall and production)?
-
-Mandarin Blueprint added production (EN->CN) notes back in August 2025 for Phases 3 through 5 (at least).
-However, many of the ordinary recall (CN->EN) sentences does not have a corresponding EN->CN sentence.
-If you're a completionist like me, you can simply add the recall sentence twice (it'll show up as a duplicate in Anki) and then:
-- change the note type to `Sentence Note Production` (ctrl+shift+m),
-- change the `SENTENCE` tag to `SENTENCE_PRODUCTION`,
-- move the note to a different deck if you like to split them up (ctrl+d).
-
-That way, you can create the missing production notes yourself with minimal effort.
-
-
 # Changelog
 
 ## V2.4.4 (2025-12-13)
@@ -108,7 +96,8 @@ You must have:
 * GreaseMonkey extension for Firefox, TamperMonkey extension for Chrome/Chromium/Edge
 * A user account on Traverse
 * Anki with AnkiConnect installed (see this page for installation: https://foosoft.net/projects/anki-connect/)
-* You must have the deck types called `CHARACTER NOTE` (with these fields: `HANZI`, `STROKE ORDER`, `KEYWORD`, `PINYIN`, `ACTOR`, `SET`, `PROPS`, `NOTES`, `AUDIO`, `SOURCE LESSON`) and `MB CLOZE` (for sentences) available in Anki. You can use the `example.apkg` in this repository too bootstrap everything. It contains example notes for all required note types, it is recommended to suspend or remove the provided example notes.
+* Install the `example.apkg` example deck into your Anki to get the required notes (https://github.com/soborg/travToAnki/raw/refs/heads/main/example.apkg)
+
 
 ### Special settings if you're using Chrome
 
