@@ -96,7 +96,6 @@ You must have:
 * GreaseMonkey extension for Firefox, TamperMonkey extension for Chrome/Chromium/Edge
 * A user account on Traverse
 * Anki with AnkiConnect installed (see this page for installation: https://foosoft.net/projects/anki-connect/)
-* Install the `example.apkg` example deck into your Anki to get the required notes (https://github.com/soborg/travToAnki/raw/refs/heads/main/example.apkg)
 
 
 ### Special settings if you're using Chrome
@@ -123,6 +122,8 @@ You must have:
 
 * Open the following user script: https://github.com/soborg/travToAnki/raw/refs/heads/main/travToAnki.user.js
 * A prompt should appear automatically, click Install.
+* Install the `example.apkg` example deck into your Anki to get the required notes (https://github.com/soborg/travToAnki/raw/refs/heads/main/example.apkg)
+* Open Traverse and verify there's an `Anki++` button when you enter a specific deck/level.
 
 # Liability
 
