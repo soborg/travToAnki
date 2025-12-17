@@ -30,7 +30,7 @@ It'll add all (remaining) cards starting from the one you have selected, one by 
 
 It'll add all cards the cards from that level, one by one. May take between an hour, hour and a half, depending on the amount of cards to extract.
 
-It's recommended to refresh Traverse before continuing with other levels. The more you use and navigate Traverse the slower it becomes.
+It's recommended to refresh Traverse before continuing with other levels (clears the active cache). The more you use and navigate Traverse the slower it becomes.
 
 
 ## Changing Target Decks
