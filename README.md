@@ -44,6 +44,8 @@ Deck names are automatic for all other types.
 
 Use `AUTO` as deck name to let the script do it automatically.
 
+Use `My MB::AUTO` to let it automatically create decks under the `My MB` master deck.
+
 Decks will be created automatically if they do not already exist.
 
 
