@@ -12,7 +12,10 @@ Note: Exported notes are unsuspended by default, suspend them manually if you do
 * Verify in your Anki `Mining` deck (or whatever name you selected in the `T2A` menu).
 
 
-## Adding a bunch of notes (e.g. all regular notes from a level 16)
+## Adding a bunch of notes
+
+For example, all regular notes from level 16.
+
 - Open level 16
 - Click `T2A` menu, then click `Automagic`
 
