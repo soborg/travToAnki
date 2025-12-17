@@ -1,3 +1,61 @@
+
+# Quickstart/Usage
+
+* Anki must be running. AnkiConnect must be enabled.
+* Open Traverse and a deck/note (an `Anki++` button should appear, otherwise somethings wrong, make an issue!).
+
+Note: Exported notes are unsuspended by default, suspend them manually if you don't want to review them just yet.
+
+## Adding a single note
+
+* Click the button, a green box should flash briefly if it succeeded.
+* Verify in your Anki `Mining` deck (or whatever name you selected in the `T2A` menu).
+
+
+## Adding a bunch of notes (e.g. all regular notes from a level 16)
+- Open level 16
+- Click `T2A` menu, then click `Automagic`
+
+It'll add all (remaining) cards starting from the one you have selected, one by one. So if you have the first card selected, it'll add the whole list (it doesn't descent into sub-decks, e.g. Sentence decks).
+
+
+## Adding a complete level for Intermediate and beyond (MSLK and TPV very soon)
+
+- open the level, e.g. level 42
+- make sure you're at the top-level, there should be a number of sub-decks visible
+- open `T2A` and click `Full Level Auto`
+
+It'll add all cards the cards from that level, one by one. May take between an hour, hour and a half, depending on the amount of cards to extract.
+
+It's recommended to refresh Traverse before continuing with other levels. The more you use and navigate Traverse the slower it becomes.
+
+
+## Changing Target Decks
+
+- Open `T2A` menu and enter a name for
+  - `Character Deck Name` changes target deck for these note types: `sets`, `actors`, `props`, `characters`, `vocab`
+  - `Sentence Deck Name` changes target deck for these note types: `sentences`
+  - `SentenceProduction Deck Name` changes target deck for these note types: `sentence active recall`
+
+Deck names are automatic for all other types.
+
+Use `AUTO` as deck name to let the script do it automatically.
+
+Decks will be created automatically if they do not already exist.
+
+
+## Pro tip for sentences (recall and production)?
+
+Mandarin Blueprint added production (EN->CN) notes back in August 2025 for Phases 3 through 5 (at least).
+However, many of the ordinary recall (CN->EN) sentences does not have a corresponding EN->CN sentence.
+If you're a completionist like me, you can simply add the recall sentence twice (it'll show up as a duplicate in Anki) and then:
+- change the note type to `Sentence Note Production` (ctrl+shift+m),
+- change the `SENTENCE` tag to `SENTENCE_PRODUCTION`,
+- move the note to a different deck if you like to split them up (ctrl+d).
+
+That way, you can create the missing production notes yourself with minimal effort.
+
+
 # Changelog
 
 ## V2.4.4 (2025-12-13)
@@ -71,65 +129,6 @@ You must have:
 
 * Open the following user script: https://github.com/soborg/travToAnki/raw/refs/heads/main/travToAnki.user.js
 * A prompt should appear automatically, click Install.
-
-
-# Using the Tool
-
-* Anki must be running. AnkiConnect must be enabled.
-* Open Traverse and open a card you'd like to add to Anki, an `Anki++` button should appear immediately (if it doesn't, somethings wrong, please make an issue!).
-* Click the button, a green checkmark should flash briefly if it succeeded.
-* Verify in your Anki `Mining` deck that the new note is added (you may have to click the `Mining` deck in the Browse menu to refresh). If it's not, something's broken, create an issue or contact me if you know my contact details.
-
-Exported notes are unsuspended by default, suspend them manually if you don't want to review them just yet.
-
-## Supported note types
-
-T2A can extract:
-
-- Every note type from the main MB course
-- MSLK
-- TPV soon'ish? who knows!
-
-## Pro tip for sentences (recall and production)
-
-Mandarin Blueprint added production (EN->CN) notes back in August 2025 for Phases 3 through 5 (at least).
-However, many of the ordinary recall (CN->EN) sentences does not have a corresponding EN->CN sentence.
-If you're a completionist like me, you can simply add the recall sentence twice (it'll show up as a duplicate in Anki) and then:
-- change the note type to `Sentence Note Production` (ctrl+shift+m),
-- change the `SENTENCE` tag to `SENTENCE_PRODUCTION`,
-- move the note to a different deck if you like to split them up (ctrl+d).
-
-That way, you can create the missing production notes yourself with minimal effort.
-
-
-## Work Flow (automation)
-
-* open a level.
-* click a card (this will be first card to be added)
-* click the T2A menu, click Automagic. (click `Stop Auto` to stop the process).
-
-It will create all the cards for that level, beginning with the card you have open.
-
-**Note:** it does not descent into sub-levels/sub-groups, so for Sentences during the foundation levels (13 -> 30), and the sub-levels/sub-groups during Intermediate and beyond, you should navigate to those individually.
-
-## Work Flow (full level automation)
-
-- Navigate to a level (intermediate and beyond)
-- Make sure you're on the top-level (you will see many sub-decks: `751-760`, `751-760 V.I.C.`, `761-770`, etc.)
-- Click `T2A` menu, then `Full Level Auto`. (click `Stop Auto` to stop, or refresh browser, you will have to manually create or use the `Automagic` option above to create the remaining cards.
-
-It's essentially same as above, except this *does* descent into sup-levels/sub-groups, but only for Intermediate and beyond.
-
-Due to the lag issue with Traverse, it still takes some time to complete (~9 seconds between each card). A full level of intermediate takes around an hour, total.
-
-
-## Work Flow
-
-* add a bunch of cards from Traverse.
-* rename the deck, or move the cards to other decks as you please.
-* if the former, create a new deck called 'Mining'.
-* repeat until you're done.
-
 
 # Liability
 
