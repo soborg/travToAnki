@@ -5,7 +5,7 @@
 - Install the `example.apkg` deck in Anki (contains required note types): https://github.com/soborg/travToAnki/raw/refs/heads/main/example.apkg
 
 
-See [Installing the Tool](https://github.com/soborg/travToAnki/edit/main/README.md#installing-the-tool) chapter below for more details and required quirks.
+See [Installation](https://github.com/soborg/travToAnki/blob/main/README.md#installation) chapter below for more details and quirks.
 
 
 # Quickstart/Usage
