@@ -1,5 +1,15 @@
+# Quick Installation
+
+- Install GreasyMonkey/TamperMonkey extension for your browser.
+- install the user script in GreaseMonkey/TamperMonkey: https://github.com/soborg/travToAnki/raw/refs/heads/main/travToAnki.user.js
+- Install the `example.apkg` deck in Anki (contains required note types): https://github.com/soborg/travToAnki/raw/refs/heads/main/example.apkg
+
+
+See [Installing the Tool](https://github.com/soborg/travToAnki/edit/main/README.md#installing-the-tool) chapter below for more details and required quirks.
+
 
 # Quickstart/Usage
+
 
 * Anki must be running. AnkiConnect must be enabled.
 * Open Traverse and a deck/note (an `Anki++` button should appear, otherwise somethings wrong, make an issue!).
