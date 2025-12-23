@@ -22,7 +22,7 @@ GM.getResourceUrl("handlebarjs").then(res => {
 (function() {
   var SETTINGS = {
     stopAutomationFlag: false,
-    DEBUG: true,
+    DEBUG: false,
 
     USER_CONFIG: JSON.parse(unsafeWindow.localStorage.getItem("traverse2AnkiConfig") || "{}"),
 
