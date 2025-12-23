@@ -1,10 +1,12 @@
 # Overview
 
-Traverse2Anki is a GreaseMonkey/TamperMonkey tool, used for easily creating Anki notes from Traverse. Traverse is a walled garden, closed source, system.
-It supports the following types from Traverse:
+Traverse2Anki is a GreaseMonkey/TamperMonkey tool, used for easily creating Anki notes from Traverse. Traverse is a walled garden, closed source, system, that does not feature any notable export features.
+This tool supports the extracting and creation (in Anki), the following note types from Traverse:
 - Base curriculum (characters, props, actors, sets, words, sentence, active recall sentences)
 - TPV and MSLK
 - Conversation Connectors
+
+It does not preserve existing review history.
 
 
 # Quick Installation
@@ -179,4 +181,9 @@ The developer(s) of this tool can not be held liable for any use or misuse of th
 
 # But Why All This?!
 
-Traverse bad, Anki good.
+This tool is not created to spite the creators of TMB, quite the contrary. It was created because the service of Traverse had degraded to an unacceptable degree.
+Deal-breaking issues remaing unsolved for months (and counting), technical support is practically non-existent, the platform is generally poorly maintained, weird development decisions claiming to address some of these issues, while they only made other things worse.  Despite good intentions to be open about progress and roadmaps, this has not been practiced. The road to hell is paved with good intentions.
+
+Traverse is practically mandatory to participate and gain proper value from the MB curriculum, a very expensive course (by some measures). When half the toolbox doesn't function, alternative approaches had to be made. This project is the result of that alternatigve approach.
+
+In short: Traverse bad, Anki good.
