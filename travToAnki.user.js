@@ -1461,7 +1461,7 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
       ANKI.createModels();
     });
   }
-//   SETTINGS.migrateConfig();
+  SETTINGS.migrateConfig();
 
 //     // --- MutationObserver (No changes) ---
   const observerCallback = function(mutationsList, observer) {
