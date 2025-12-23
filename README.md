@@ -1,3 +1,12 @@
+# Overview
+
+Traverse2Anki is a GreaseMonkey/TamperMonkey tool, used for easily creating Anki notes from Traverse. Traverse is a walled garden, closed source, system.
+It supports the following types from Traverse:
+- Base curriculum (characters, props, actors, sets, words, sentence, active recall sentences)
+- TPV and MSLK
+- Conversation Connectors
+
+
 # Quick Installation
 
 - Install GreasyMonkey/TamperMonkey extension for your browser.
@@ -61,6 +70,12 @@ Decks will be created automatically if they do not already exist.
 
 # Changelog
 
+
+## V2.5 (2025-12-23)
+- Support MSLK and TPV. Destination Anki decks are hard-coded, with sane defaults. Will attempt to retain same general structure as in Traverse.
+- Massive code overhaul.
+
+
 ## V2.4.4 (2025-12-13)
 - more stable deck name auto-generation.
 
@@ -106,6 +121,9 @@ You must have:
 * GreaseMonkey extension for Firefox, TamperMonkey extension for Chrome/Chromium/Edge
 * A user account on Traverse
 * Anki with AnkiConnect installed (see this page for installation: https://foosoft.net/projects/anki-connect/)
+
+If you use Chrome, or one derived from Chromium (Edge, Brave, etc.), it might ask you to confirm downloading external sources (it'll attempt to download this URL: `https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js`). You must accept that.
+The purpose of this external file is to handle HTML templating within the tool (it's used for creating the menu and button, and stuff).
 
 
 ### Special settings if you're using Chrome
