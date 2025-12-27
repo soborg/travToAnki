@@ -54,13 +54,13 @@ For example, all regular notes from level 16.
 It'll add all (remaining) cards starting from the one you have selected, one by one. So if you have the first card selected, it'll add the whole list (it doesn't descent into sub-decks, e.g. Sentence decks).
 
 
-## Adding a complete level for Intermediate and beyond (MSLK and TPV very soon)
+## Adding a complete level for Intermediate and beyond (also MSLK and TPV)
 
-- open the level, e.g. level 42
+- open the level, e.g. `Level 42 - Intermediate`, or the `Asking for Directions` within `TPV - Travel and Directions`.
 - make sure you're at the top-level, there should be a number of sub-decks visible
 - open `T2A` and click `Full Level Auto`
 
-It'll add all cards the cards from that level, one by one. May take between an hour, hour and a half, depending on the amount of cards to extract.
+It'll add all cards the cards from that level, one by one. May take between an hour, hour and a half, depending on the amount of cards to extract (allow 6-10 seconds per note)
 
 It's recommended to refresh Traverse before continuing with other levels (clears the active cache). The more you use and navigate Traverse the slower it becomes.
 
