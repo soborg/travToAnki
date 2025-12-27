@@ -664,12 +664,22 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
         }
 
         else if (child.textContent.startsWith("Chinese")) {
-          var pinyin = this.cleanText(children[idx+2].textContent);
+          if (children[idx+1].textContent.match(/。/) || children[idx+2].textContent.match(/[a-z]+/) ) {
+            var phrase = this.cleanText(children[idx+1].textContent);
+            var pinyin = this.cleanText(children[idx+2].textContent);
+          }
+          if (children[idx+2].textContent.match(/。/) || children[idx+1].textContent.match(/[a-z]+/) ) {
+            var pinyin = this.cleanText(children[idx+1].textContent);
+            var phrase = this.cleanText(children[idx+2].textContent);
+          }
+
           if (pinyin.includes("Phrase #") ) {
            	pinyin = pinyin.split("Phrase #")[0];
           }
+          if (phrase.includes("Phrase #") ) {
+            phrase = phrase.split("Phrase #")[0];
+          }
           card.pinyin = pinyin;
-          var phrase = this.cleanText(children[idx+1].textContent);
           card.sentence = phrase;
           this.attachAudio(card, children[idx+2], "chinese_audio");
           this.attachAudio(card, children[idx+3], "chinese_audio");
@@ -883,7 +893,7 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
         idx = parseInt(idx);
         var elm = elms[idx];
 
-        if ((elm.textContent.includes(" 汉字") || elm.textContent.includes(" - 句子") || elm.textContent.includes(" Vocab in Context") || elm.textContent.includes("V.I.C.") || elm.textContent.match(/^L[0-9]/) )
+        if ((elm.textContent.includes(" 汉字") || elm.textContent.includes(" - 句子") || elm.textContent.includes(" Vocab in Context") || elm.textContent.includes("V.I.C.") || elm.textContent.match(/^L[0-9]/) || elm.textContent.match(/^MSLK/) )
             && elm.parentNode.parentNode.style['border-color'].split(" rgb")[2] == selectedStyle) { // it's the next one lol
           idx++;
           break;
