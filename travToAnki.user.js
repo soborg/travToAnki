@@ -929,6 +929,7 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
     },
 
     attachAudio: function(card, child, keyname="audio") {
+      if (!child) { return; }
       let audio_elms = child.getElementsByTagName('audio');
       for (let elm of audio_elms) {
         if (!elm.textContent) { continue; }
