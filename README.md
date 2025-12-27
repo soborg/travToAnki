@@ -2,9 +2,19 @@
 
 Traverse2Anki is a GreaseMonkey/TamperMonkey tool, used for easily creating Anki notes from Traverse. Traverse is a walled garden, closed source, system, that does not feature any notable export features.
 This tool supports the extracting and creation (in Anki), the following note types from Traverse:
-- Base curriculum (characters, props, actors, sets, words, sentence, active recall sentences)
+- Base curriculum (characters, props, actors, sets, words, sentences, active recall sentences)
 - TPV and MSLK
 - Conversation Connectors
+
+The notes created in Anki should include:
+- original audio
+- tags (level, type, ..)
+- special properties (props/sets/actors for characters)
+- translations, usages, keywords, top-down-words, ..
+- user notes (in most cases)
+- images (in some cases)
+
+If you experience a vital piece of information is not present in your Anki note, please make an issue and I will try to fix it.
 
 It does not preserve existing review history.
 
@@ -23,21 +33,22 @@ See [Installation](https://github.com/soborg/travToAnki/blob/main/README.md#inst
 
 
 * Anki must be running. AnkiConnect must be enabled.
-* Open Traverse and a deck/note (an `Anki++` button should appear, otherwise somethings wrong, make an issue!).
+* Open Traverse (an `Anki++` and `T2A` button should appear, otherwise something is wrong, please make an issue!).
 
-Note: Exported notes are unsuspended by default, suspend them manually if you don't want to review them just yet.
+Note: the notes created in Anki are unsuspended by default, you can suspend them manually if you don't want to review them just yet.
+
 
 ## Adding a single note
 
 * Click the button, a green box should flash briefly if it succeeded.
-* Verify in your Anki `Mining` deck (or whatever name you selected in the `T2A` menu).
+* Verify the card is created in the Anki deck. `Mining` is the default for characters/props/sets/actors/vocab.
 
 
 ## Adding a bunch of notes
 
 For example, all regular notes from level 16.
 
-- Open level 16
+- Open a level, e.g. `Level 16 - Phase 3`.
 - Click `T2A` menu, then click `Automagic`
 
 It'll add all (remaining) cards starting from the one you have selected, one by one. So if you have the first card selected, it'll add the whole list (it doesn't descent into sub-decks, e.g. Sentence decks).
@@ -52,6 +63,8 @@ It'll add all (remaining) cards starting from the one you have selected, one by 
 It'll add all cards the cards from that level, one by one. May take between an hour, hour and a half, depending on the amount of cards to extract.
 
 It's recommended to refresh Traverse before continuing with other levels (clears the active cache). The more you use and navigate Traverse the slower it becomes.
+
+**NOTE FOR TPV** : navigate to a subcategory (e.g. `Asking for Directions` within `Travel and Directions`) and use `Full Level Auto` from there to get all 3 levels/parts from that subcategory.
 
 
 ## Changing Target Decks
@@ -71,6 +84,11 @@ Decks will be created automatically if they do not already exist.
 
 
 # Changelog
+
+## V2.6 (2025-12-27)
+- buttons are always shown in Traverse navbar
+- automation and Anki++ buttons are only usable within decks
+- fix full auto navigation for TPV categories
 
 
 ## V2.5 (2025-12-23)
