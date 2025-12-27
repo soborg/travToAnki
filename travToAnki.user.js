@@ -1,9 +1,8 @@
 // ==UserScript==
 // @name         Traverse2Anki
 // @description  Export Traverse cards to Anki
-// @version      2.5
+// @version      2.6
 // @require      https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js
-// @resource     handlebarjs https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js
 // @grant        unsafeWindow
 // @grant        GM.setValue
 // @grant        GM.getValue
@@ -11,12 +10,15 @@
 // @match        https://traverse.link/*
 // ==/UserScript==
 
+/*
+ @resource     handlebarjs https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js
+*/
 
-let script = document.createElement("script");
-GM.getResourceUrl("handlebarjs").then(res => {
-  script.src = res;
-  document.body.appendChild(script);
-});
+// let script = document.createElement("script");
+// GM.getResourceUrl("handlebarjs").then(res => {
+//   script.src = res;
+//   document.body.appendChild(script);
+// });
 
 
 (function() {
@@ -83,6 +85,7 @@ GM.getResourceUrl("handlebarjs").then(res => {
       }
     },
 
+
     ANKI_MODELS: [], // fetched from remote at startup
 
     getConfig: function(key, def) {
@@ -131,13 +134,55 @@ GM.getResourceUrl("handlebarjs").then(res => {
     sheet.insertRule(css, (sheet.rules || sheet.cssRules || []).length);
   };
 
+  GM_addStyle(".w3-bar{width:100%; overflow:hidden; display:inline-block;}");
+  GM_addStyle(".w3-bar-item{padding:8px 16px; float:left; width:auto; border:none; display:block; outline:0}");
+  GM_addStyle(".w3-dropdown-hover, .w3-dropdown-click{position:static;float:left}");
+  GM_addStyle(".w3-button {white-space:normal; cursor:pointer} ");
+  GM_addStyle(".w3-container .w3-panel{margin-top:16px;margin-bottom:16px}");
+  GM_addStyle(".w3-black,.w3-hover-black:hover{color:#fff !important; background-color:#000 !important}");
+
+  GM_addStyle(`.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+  z-index: 9999; /* Sit on top */
+  padding-top: 100px; /* Location of the box */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  overflow: auto; /* Enable scroll if needed */
+  background-color: rgb(0,0,0); /* Fallback color */
+  background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}`);
+  GM_addStyle(`/* Modal Content */
+.modal-content {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+}`);
+  GM_addStyle(`/* The Close Button */
+.close {
+  color: #aaaaaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}`);
+  GM_addStyle(`.close:hover,
+.close:focus {
+  color: #000;
+  text-decoration: none;
+  cursor: pointer;
+}`);
   GM_addStyle(".dropbtn { color: black; padding: 16px; font-size: 16px; border: none; cursor: pointer; }");
+  GM_addStyle(".deactivated {cursor: not-allowed !important;}")
   GM_addStyle(".dropbtn:hover { background-color: #ddd; }");
   GM_addStyle(".dropdown { float: right; position: relative; display: inline-block; }");
   GM_addStyle(".dropdown-content { display: none; position: absolute; background-color: #f1f1f1; min-width: 200px; overflow: auto; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); right: 0; z-index: 1; }");
   GM_addStyle(".dropdown-content a { color: black; padding: 12px 16px; text-decoration: none; display: block; cursor: pointer; }");
   GM_addStyle(".dropdown a:hover {background-color: #ddd; }");
-  GM_addStyle(".show {display: block;}");
+  GM_addStyle(".show {display: block !important;}");
 
   function createElement(elmtype, elmid, elmclass, elmstyle, elmtext) {
     let elm = document.createElement(elmtype);
@@ -174,7 +219,7 @@ GM.getResourceUrl("handlebarjs").then(res => {
       	let splits = top_elem.textContent.split(' - ');
       	level = splits[0].trim();
       	phase = splits[1].trim();
-      }
+	    }
 
       var subSection = '';
 
@@ -210,7 +255,7 @@ GM.getResourceUrl("handlebarjs").then(res => {
       }
 
       deckName = deckName.replace("AUTO", deckParts.join("::")); // "<custom base deck>::{phase}::{level}::{subsection}" e.g. MyMB::Phase 3::Level 18::Course, or MyMB::Phase 7 - Upper Inter...::Level 64::1821 - 1830 - Vocab In Context
-      return deckName;
+			return deckName;
     },
 
     generateUID: function() {
@@ -248,16 +293,16 @@ GM.getResourceUrl("handlebarjs").then(res => {
         }
       }
       if (settingsCtx.IMAGE_FIELDS) {
-        for (let key in settingsCtx.IMAGE_FIELDS) {
-          let t2a_field_name = settingsCtx.IMAGE_FIELDS[key];
-          pictures = pictures.concat(this.formatImages(card[t2a_field_name], tags[0], key));
-        }
+	      for (let key in settingsCtx.IMAGE_FIELDS) {
+  	      let t2a_field_name = settingsCtx.IMAGE_FIELDS[key];
+					pictures = pictures.concat(this.formatImages(card[t2a_field_name], tags[0], key));
+      	}
       }
       if (settingsCtx.HIGHLIGHT_FIELDS) {
         for (let key in settingsCtx.HIGHLIGHT_FIELDS) {
-          let t2a_field_name = settingsCtx.HIGHLIGHT_FIELDS[key];
+        	let t2a_field_name = settingsCtx.HIGHLIGHT_FIELDS[key];
           if (card[t2a_field_name]) { // if there even is a value
-            fields[key] = fields[key].replace(card[t2a_field_name], `<span style="background-color: rgb(90, 131, 0);">${card[t2a_field_name]}</span>`)
+						fields[key] = fields[key].replace(card[t2a_field_name], `<span style="background-color: rgb(90, 131, 0);">${card[t2a_field_name]}</span>`)
           }
       	}
       }
@@ -348,7 +393,7 @@ GM.getResourceUrl("handlebarjs").then(res => {
     },
 
     getAnkiModels: function() {
-      return this.anki_invoke('modelNames', 6);
+			return this.anki_invoke('modelNames', 6);
     },
 
     getAnkiFields: function(modelName) {
@@ -671,7 +716,25 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
 
       let card = {
         'type': null,
+        'hanzi': null,
+        'keyword': null,
+        'pinyin': null,
+        'audio': [],
+        'sentence_audio': [], // compat. Used in editor mode
+        'sentence': null, // compat. Used in editor mode
+        'sentence_word': null,
+        'actor': null,
+        'set': null,
+        'final': null,
+        'props': [],
+        'notes': [],
+        'usage': [],
+        'characters': [],
+        'source lesson': null,
+        'component': null, // for prop cards
         'tags': [],
+        'top-down': [],
+        'word': "",
       };
 
       this.attachCardType(card, children);
@@ -708,17 +771,22 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
     },
 
     enqueueLevel: function() {
-      Traverse.automationQueue.length = 0;
+     	Traverse.automationQueue.length = 0;
       let elms = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"));
-      for (let idx in elms) {
-        idx = parseInt(idx);
+      let message = elms[0].textContent;
+      if (message.match(/^TPV/) ) {
+        message = elms[1].textContent;
+      }
+      UI.createFlash(`Full auto! Collecting: ${message}`, 10000);
+			for (let idx in elms) {
+				idx = parseInt(idx);
         let e = elms[idx];
         if (e.textContent.includes(" 汉字") || e.textContent.includes(" 句子") || e.textContent.includes(" Vocab In Context") || e.textContent.includes("V.I.C") || e.textContent.includes("语境.") || e.textContent.match(/^L[0-9]/) || e.textContent.match(/^MSLK/) ) {
           Traverse.automationQueue.push(idx);
         }
       }
       console.log(Traverse.automationQueue);
-      window.setTimeout(() => { console.log("continuing"); Traverse.continueAutomation(); }, 3000);
+			window.setTimeout(() => { console.log("continuing"); Traverse.continueAutomation(); }, 3000);
     },
 
     continueAutomation: function() {
@@ -737,14 +805,18 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
     },
 
     navigateTopLevel: function() {
-      let toplevel = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"))[0];
-      toplevel.click();
+      let idx = 0;
+      let navigation_elements = document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full");
+      if (navigation_elements[0].textContent.match(/TPV/)) {
+          idx = 1;
+      }
+      navigation_elements[idx].click();
     },
 
     automateLevel: function() {
       console.log("hello auto");
-      SETTINGS.stopAutomationFlag = false;
-      UI.createStopButton();
+			SETTINGS.stopAutomationFlag = false;
+			UI.createStopButton();
 
       function doit(pointer) {
         let delaySeconds = 8;
@@ -752,7 +824,7 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
         console.log("stopping?", SETTINGS.stopAutomationFlag);
 
         let ahrefs = document.getElementsByClassName("ProseMirror")[0].getElementsByTagName("a");
-        let unresolved = Array.from(ahrefs).filter(a => a.textContent.includes("Mandarin_Blueprint/"));
+				let unresolved = Array.from(ahrefs).filter(a => a.textContent.includes("Mandarin_Blueprint/"));
       	if (unresolved.length > 0) {
           console.log("not all links are resolved: ", unresolved);
 	        window.setTimeout(() => { doit(pointer); }, 1000);
@@ -761,7 +833,7 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
 
         Traverse.parseTraverseAndAdd(); // collect open card
 
-        let elms = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"))
+				let elms = Array.from(document.getElementsByClassName("max-h-full flex justify-between flex-nowrap items-start w-full"))
         let elm = elms[pointer];
         let remaining = elms.slice(pointer, elms.length);
 
@@ -776,6 +848,7 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
 					if (Traverse.automationQueue.length > 0) {
             UI.createFlash("segment done, continuing soon!", 5000);
             Traverse.navigateTopLevel();
+            Traverse.stopAutomation();
             window.setTimeout(() => { console.log("continuing automation"); Traverse.continueAutomation(); }, 2000);
           } else {
 	          UI.createFlash("Level/segment done, stopping automation!", 9000);
@@ -1027,8 +1100,8 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
           card.english = child.textContent;
           let siblings = this.getSiblings(child);
           for (let sib of siblings) {
-            if (sib.textContent.match(/^[AB]:/) ) {
-   	          card.english += " " + sib.textContent;
+    	      if (sib.textContent.match(/^[AB]:/) ) {
+   	         card.english += " " + sib.textContent;
       	    }
           }
         }
@@ -1261,7 +1334,7 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
       let settingsCtx = SETTINGS.DEFAULTS[settingsName];
       let config_key = settingsCtx.CONFIG_KEY;
       let miningDeck = SETTINGS.getConfig(config_key, settingsCtx[field]);
-      var deck = prompt("Enter deck name (it will be created it Anki, if it does not exist)", miningDeck);
+      let deck = prompt("Enter deck name (it will be created it Anki, if it does not exist)", miningDeck);
       if (!deck) {
         deck = miningDeck;
       }
@@ -1282,52 +1355,62 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
       console.log(value.target.name, value.target.value);
     },
 
-    createSettingsEditor: function() {
-      if (document.getElementById("t2asettings")) return;
+    createMyModal: function() {
+      let html = `
+<div id="myModal" class="modal">
 
-      console.log('[T2A] creating settings editor');
-      let settings_html = `
-<div id="t2asettings" class="flex-1 border rounded-mb overflow-y-auto">
-	<div class="bg-white h-full">
-  	<div class="reveal-card dark:bg-gray-900 dark:text-white">
-    	<div class="reveal-prompt">
-      	<div id="revealed-editor" class="group/editor dark:bg-gray-900", style="position: relative; width: 100%;">
-        	<div class="add-reviews-surface">
-          	<button id="killButton" class="learn-mode-button-container skip-button-container" style="right: 0px; position: absolute;">Close</button>
+  <!-- Modal content -->
+  <div class="modal-content dark:bg-gray-900">
+    <span class="close" id="modalClose">&times;</span>
 
-          </div>
-        </div>
-      </div>
-    </div>
+		<div class="w3-container">
+	  	<h2>Traverse2Anki Settings</h2>
+	  	<p>Somewhat customize the extension settings here, such as target deck, fields, and notes for extracted Traverse card types.</p>
+		</div>
+    <hr/>
+
+    <div class="w3-bar w3-black">
+  		<button id="showSentenceConfig" class="w3-bar-item w3-button dark:bg-gray-700 dark:text-white">Sentence Settings</button>
+  		<button id="showSentenceProductionConfig" class="w3-bar-item w3-button dark:bg-gray-700 dark:text-white">Sentence Production Settings</button>
+  		<button id="showCharacterConfig" class="w3-bar-item w3-button dark:bg-gray-700 dark:text-white">Character Settings</button>
+		</div>
+
+    <div id="SentenceConfig" class="w3-container city">
+  		<h2>Sentence Config</h2>
+  		<p>Settings for the capital of Sentence notes.</p>
+		</div>
+
+		<div id="SentenceProductionConfig" class="w3-container city" style="display:none">
+  		<h2>SentenceProductionConfig</h2>
+  		<p>Settings for the capital of Sentence Production notes.</p>
+		</div>
+
+		<div id="CharacterConfig" class="w3-container city" style="display:none">
+  		<h2>CharacterConfig</h2>
+  		<p>CharacterConfig is the capital of Characters.</p>
+		</div>
+
+<!--     <div id="revealed-editor">Some text in the Modal..</d> -->
   </div>
-</div>`;
 
-      let div = createElement("div", "t2asettings", "flex-1 border rounded-md overflow-y-auto");
-      let bg_white_div = createElement("div", null, "bg-white h-full");
-      div.appendChild(bg_white_div);
-      let revealCard = createElement("div", null, "reveal-card dark:bg-gray-900 dark:text-white");
-      bg_white_div.appendChild(revealCard);
-      let revealPrompt = createElement("div", null, "reveal-prompt");
-      revealCard.appendChild(revealPrompt);
-      let editor = createElement("div", "revealed-editor", "group/editor dark:bg-gray-900", "position: relative; width: 100%;");
-      revealPrompt.appendChild(editor);
+</div>
+`;
+      UI.appendHtml(document.body, html);
 
-      let buttonContainer = createElement("div", "", "add-reviews-surface-2 reveal-surface-2");
-      editor.appendChild(buttonContainer);
-
-      let killButton = createElement("button", "killButton", "learn-mode-button-container skip-button-container", "right: 0px; position: absolute;", " Close ");
-      buttonContainer.appendChild(killButton);
-      killButton.onclick = function() { document.getElementById("t2asettings").remove(); }
+      UI.createSettingsSection("Sentence Settings", "Select Sentence Model", SETTINGS.DEFAULTS.SENTENCE, "SENTENCE", document.getElementById("SentenceConfig"));
+      UI.createSettingsSection("Sentence Production Settings", "Select Sentence Production Model", SETTINGS.DEFAULTS.SENTENCE_PRODUCTION, "SENTENCE_PRODUCTION", document.getElementById("SentenceProductionConfig"));
+      UI.createSettingsSection("Character Settings", "Select Character Model", SETTINGS.DEFAULTS.MOVIE, "MOVIE", document.getElementById("CharacterConfig"));
+    },
 
 
-      function createSettingsSection(settingsTitle, settingsName, settingsCtx, sectionId) {
-        var anki_fields = [];
+    createSettingsSection: function(settingsTitle, settingsName, settingsCtx, sectionId, editor) {
+      var anki_fields = [];
 
-        ANKI.getAnkiFields(settingsCtx.MODEL).then( (fields) => {
-          anki_fields = fields
-        }).then( () => {
+      ANKI.getAnkiFields(settingsCtx.MODEL).then( (fields) => {
+        anki_fields = fields
+      }).then( () => {
 
-      	  let section_template = `
+        let section_template = `
 <H1 class="field-name">{{ settingsTitle }}</h1>
 <div class="field-name">{{ settingsName }}</div>
 <div id="{{ settingsName }}-div">
@@ -1342,18 +1425,18 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
   </select>
 </div>
 `;
-          let templ = Handlebars.compile(section_template);
-          let rendered = templ( { settingsTitle: settingsTitle, settingsName: settingsName, models: SETTINGS.ANKI_MODELS, selectedModel: settingsCtx.MODEL } );
-          UI.appendHtml(editor, rendered);
-          createFieldSettings(settingsCtx, anki_fields, `${settingsName}-div`, sectionId);
+        let templ = Handlebars.compile(section_template);
+        let rendered = templ( { settingsTitle: settingsTitle, settingsName: settingsName, models: SETTINGS.ANKI_MODELS, selectedModel: settingsCtx.MODEL } );
+        UI.appendHtml(editor, rendered);
+        UI.createFieldSettings(settingsCtx, anki_fields, `${settingsName}-div`, sectionId);
 
-          document.getElementById(`${settingsName}-models`).onchange = function(event) { UI.changeAnkiModel(settingsCtx, event) };
+        document.getElementById(`${settingsName}-models`).onchange = function(event) { UI.changeAnkiModel(settingsCtx, event) };
 
-        });
-      };
+      });
+    },
 
-      function createFieldSettings(settingsCtx, anki_fields, anchorId, sectionId) {
-        let html_template = `
+    createFieldSettings: function(settingsCtx, anki_fields, anchorId, sectionId) {
+      let html_template = `
 <div id ="{{ settings.MODEL}}-options-container">
 	<table>
   	<tr>
@@ -1367,6 +1450,8 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
       </td>
       <td>
         <select name="{{../model }}_{{ this }}" id="{{../model }}_{{ this }}">
+        	<option value=""></option>
+
           {{#each ../settings.FIELDS }}
           {{#ifEquals @key option }}
           <option value="{{this}}" selected>{{this}}</option>
@@ -1381,23 +1466,13 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
   </table>
 </div>`;
 
-        let tmpl = Handlebars.compile(html_template);
-        let rendered = tmpl( { model: sectionId, settings: settingsCtx, options: anki_fields } );
-        UI.appendHtml(document.getElementById(anchorId), rendered);
+      let tmpl = Handlebars.compile(html_template);
+      let rendered = tmpl( { model: sectionId, settings: settingsCtx, options: anki_fields } );
+      UI.appendHtml(document.getElementById(anchorId), rendered);
 
-        for	(var anki_field of anki_fields) {
-          document.getElementById(`${sectionId}_${anki_field}`).onchange = function(event) { UI.changeAnkiModel(settingsCtx, event) };
-        }
-      };
-
-      createSettingsSection("Sentence Settings", "Select Sentence Model", SETTINGS.DEFAULTS.SENTENCE, "SENTENCE");
-
-
-// 			window.setTimeout(() => createSettingsSection("Sentence Production Settings", "Select Sentence Production Model", SETTINGS.DEFAULTS.SENTENCE_PRODUCTION), 50);
-// 			window.setTimeout(() => createSettingsSection("Character/Set/Prop/Actor Settings", "Select Model", SETTINGS.DEFAULTS.MOVIE), 50);
-
-      var anchor = document.getElementsByClassName('h-full w-full pt-16 flex-col md:flex-row')[0];
-      anchor.appendChild(div);
+      for	(var anki_field of anki_fields) {
+        document.getElementById(`${sectionId}_${anki_field}`).onchange = function(event) { UI.changeAnkiModel(settingsCtx, event) };
+      }
     },
 
     createStopButton: function() {
@@ -1407,6 +1482,50 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
 
     createMenu: function() {
       if (document.getElementById("t2amenu")) return;
+
+
+      let menu_html = `
+<a id="aplusplus" class="homescreen-button cue-button review-due-button onboarding-review-due button-glow deactivated" title="Add open card to Anki">Anki++</a>
+<div class="dropdown">
+	<button id="t2amenu" class="homescreen-button text-black dark:text-white dropbtn" title="Traverse 2 Anki Settings">T2A</button>
+	<div id="myDropdown" class="dropdown-content">
+  	<a id="characterdeck" title="Set Character Deck (also used for props, actors, sets, words)">Character Deck Name</a>
+    <a id="sentencedeck" title="Set Sentence Deck">Sentence Deck Name</a>
+    <a id="sentenceproductiondeck" title="Set Sentence Production Deck">SentenceProduction Deck Name</a>
+<!--    <a id="lemodal" title="Traverse 2 Anki settings">Settings</a> -->
+
+    <a id="levelauto" class="deactivated" title="Create Anki cards from open level, starting with the selected node">Automagic</a>
+    <a id="fulllevelauto" class="deactivated" title="Automate a full level (Intermediate and up). Open the level, be on the top-level and click this!">Full Level Auto
+    	<span style="padding-left:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-repeat" viewBox="0 0 16 16"><path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192m3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z"/>
+</svg></span>
+    </a>
+  </div>
+</div>`;
+      UI.appendHtml(document.getElementsByClassName('MuiButtonBase-root MuiIconButton-root MuiIconButton-colorInherit')[0].parentNode, menu_html);
+      console.log('[T2A] download button created');
+    },
+
+    activateButtons: function() {
+      for (let obj of document.getElementsByClassName("deactivated") ) {
+        obj.classList.toggle("deactivated");
+      }
+    },
+
+    addListener: function() {
+      if (unsafeWindow.listener) {
+        console.log('already listening');
+        return;
+      };
+      unsafeWindow.listener = true;
+
+      function openCity(cityName) {
+        var i;
+        var x = document.getElementsByClassName("city");
+        for (i = 0; i < x.length; i++) {
+          x[i].style.display = "none";
+        }
+        document.getElementById(cityName).style.display = "block";
+      };
 
       document.addEventListener('click', (event) => {
         if (!event.target.matches('.dropbtn')) {
@@ -1418,7 +1537,19 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
             }
           }
         }
-        if (event.target.matches('#t2amenu') ) { document.getElementById("myDropdown").classList.toggle('show'); }
+
+        if (event.target.matches(".deactivated") ) {
+          console.log("deactivated lol");
+          return;
+        }
+
+        let modal = document.getElementById("myModal");
+
+        if (event.target.matches('#t2amenu') ) {
+          let mydrop = document.getElementById("myDropdown");
+          mydrop.classList.toggle('show');
+          return;
+        }
         if (event.target.matches("#characterdeck") ) { UI.setDeckName("MOVIE", "DECK"); }
         if (event.target.matches("#sentencedeck") ) { UI.setDeckName("SENTENCE", "DECK"); }
         if (event.target.matches("#sentenceproductiondeck") ) { UI.setDeckName("SENTENCE_PRODUCTION", "DECK"); }
@@ -1426,32 +1557,22 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
         if (event.target.matches("#fulllevelauto") ) { Traverse.enqueueLevel(); }
         if (event.target.matches("#stopauto") ) { Traverse.stopAutomation(); }
         if (event.target.matches("#aplusplus") ) { Traverse.parseTraverseAndAdd(); }
-//        if (event.target.matches("#settings") ) { UI.createSettingsEditor(); }
+//         if (event.target.matches("#lemodal") ) { modal.style.display = "block"; };
+//         if (event.target.matches("#modalClose") ) { modal.style.display = "none"; };
+        if (event.target.matches("#showSentenceConfig") ) { openCity("SentenceConfig"); };
+        if (event.target.matches("#showSentenceProductionConfig") ) { openCity("SentenceProductionConfig"); };
+        if (event.target.matches("#showCharacterConfig") ) { openCity("CharacterConfig"); };
 
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
       });
-
-      let menu_html = `
-<a id="aplusplus" class="homescreen-button cue-button review-due-button onboarding-review-due button-glow" title="Add open card to Anki">Anki++</a>
-<div class="dropdown">
-	<button id="t2amenu" class="homescreen-button text-black dark:text-white dropbtn" title="Traverse 2 Anki Settings">T2A</button>
-	<div id="myDropdown" class="dropdown-content">
-  	<a id="characterdeck" title="Set Character Deck (also used for props, actors, sets, words)">Character Deck Name</a>
-    <a id="sentencedeck" title="Set Sentence Deck">Sentence Deck Name</a>
-    <a id="sentenceproductiondeck" title="Set Sentence Production Deck">SentenceProduction Deck Name</a>
-<!--    <a id="settings" title="Settings">Settings</a> -->
-
-    <a id="levelauto" title="Create Anki cards from open level, starting with the selected node">Automagic</a>
-    <a id="fulllevelauto" title="Automate a full level (Intermediate and up). Open the level, be on the top-level and click this!">Full Level Auto
-    	<span style="padding-left:5px;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-repeat" viewBox="0 0 16 16"><path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192m3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z"/>
-</svg></span>
-    </a>
-  </div>
-</div>`;
-      UI.appendHtml(document.getElementsByClassName('MuiButtonBase-root MuiIconButton-root MuiIconButton-colorInherit')[0].parentNode, menu_html);
-      console.log('[T2A] download button created');
     },
   };
 
+  Handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
+    return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
+  });
   console.log("[T2A] LOADED");
 
   if (SETTINGS.ANKI_MODELS.length === 0) {
@@ -1459,22 +1580,27 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
       SETTINGS.ANKI_MODELS = models;
     }).then( () => {
       ANKI.createModels();
+    }).then( () => {
+      UI.createMyModal();
     });
   }
   SETTINGS.migrateConfig();
-
+  unsafeWindow.listener = false;
 //     // --- MutationObserver (No changes) ---
   const observerCallback = function(mutationsList, observer) {
     const avatar = document.getElementsByClassName("MuiAvatar-root MuiAvatar-circular MuiAvatar-colorDefault");
     const buttonNode = document.getElementById('t2amenu');
-    if (document.location.href.indexOf("/Mandarin_Blueprint/") > 0 && avatar[0] && !buttonNode) {
-      Handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
-        return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
-      });
+    if (avatar[0] && !buttonNode) {
       UI.createMenu();
     }
+
+    if (document.location.href.indexOf("/Mandarin_Blueprint/") > 0 && avatar[0] && buttonNode) {
+      UI.activateButtons();
+    }
+
   };
   const observer = new MutationObserver(observerCallback);
   observer.observe(document.body, { childList: true, subtree: true });
+  UI.addListener();
 
 })();
