@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Traverse2Anki
 // @description  Export Traverse cards to Anki
-// @version      2.6
+// @version      2.6.1
 // @require      https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js
 // @grant        unsafeWindow
 // @grant        GM.setValue
@@ -440,7 +440,9 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
 <div class=English>{{Notes}}</div>
 
 <br/>
-{{Chinese_Audio}}`,
+{{Chinese_Audio}}
+{{Audio}}
+`,
             "Back": `<div class=set>SENTENCE REVIEW</div>
 <div class=hanzi>{{Sentence}}</div>
 <br>
@@ -502,7 +504,9 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
 <div class=English>{{Notes}}</div>
 <br/>
 
-{{Chinese_Audio}}`
+{{Chinese_Audio}}
+{{Audio}}
+`
           }
         ]
       }
