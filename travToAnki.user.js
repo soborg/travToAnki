@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Traverse2Anki
 // @description  Export Traverse cards to Anki
-// @version      2.6.1
+// @version      2.6.2
 // @require      https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js
 // @grant        unsafeWindow
 // @grant        GM.setValue
@@ -709,13 +709,17 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
       };
       card.sentence = this.cleanText(children[0].textContent);
       card.pinyin = this.cleanText(children[1].textContent);
-      card.english = this.cleanText(children[3].textContent);
+      if (children.length == 3) {
+       	card.english = this.cleanText(children[2].textContent);
+      } else {
+      	card.english = this.cleanText(children[3].textContent);
+      }
 
       for (let idx in children) {
         let child = children[idx];
         this.attachAudio(card, child);
       }
-			this.attachImages(card);
+      this.attachImages(card);
       this.attachNotes(card);
       return card;
     },
