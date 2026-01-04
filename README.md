@@ -139,7 +139,7 @@ You must have:
 
 * Firefox or Chrome/Chromium/Edge on PC/Mac
 * GreaseMonkey extension for Firefox, TamperMonkey extension for Chrome/Chromium/Edge
-* A user account on Traverse
+* A user account on Traverse with access to the Mandarin Blueprint decks
 * Anki with AnkiConnect installed (see this page for installation: https://foosoft.net/projects/anki-connect/)
 
 If you use Chrome, or one derived from Chromium (Edge, Brave, etc.), it might ask you to confirm downloading external sources (it'll attempt to download this URL: `https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js`). You must accept that.
