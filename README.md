@@ -1,7 +1,7 @@
 # Overview
 
-Traverse2Anki is a GreaseMonkey/TamperMonkey tool, used for easily creating Anki notes from Traverse. Traverse is a walled garden, closed source, system, that does not feature any notable export features.
-This tool supports the extracting and creation (in Anki), the following note types from Traverse:
+Traverse2Anki is a GreaseMonkey/TamperMonkey tool, used for easily creating Anki notes from Traverse. Traverse is a walled garden, closed source, system, that does not sport any notable export features.
+This tool supports the extraction and creation (in Anki), the following note types from Traverse:
 - Base curriculum (characters, props, actors, sets, words, sentences, active recall sentences)
 - TPV and MSLK
 - Conversation Connectors
@@ -12,7 +12,7 @@ The notes created in Anki should include:
 - special properties (props/sets/actors for characters)
 - translations, usages, keywords, top-down-words, ..
 - user notes (in most cases)
-- images (in some cases)
+- images (in most cases)
 
 If you experience a vital piece of information is not present in your Anki note, please make an issue and I will try to fix it.
 
@@ -60,7 +60,7 @@ It'll add all (remaining) cards starting from the one you have selected, one by 
 - make sure you're at the top-level, there should be a number of sub-decks visible
 - open `T2A` and click `Full Level Auto`
 
-It'll add all cards the cards from that level, one by one. May take between an hour, hour and a half, depending on the amount of cards to extract (allow 6-10 seconds per note)
+It'll add all cards the cards from that level, one by one. A full Intermediate level may take between an hour, hour and a half, depending on the amount of cards to extract (allow 6-10 seconds per note). A full level in Advanced should take no more than 20 minutes.
 
 It's recommended to refresh Traverse before continuing with other levels (clears the active cache). The more you use and navigate Traverse the slower it becomes.
 
@@ -84,6 +84,10 @@ Decks will be created automatically if they do not already exist.
 
 
 # Changelog
+
+## V2.6.3 (2026-01-05)
+- should now correctly identify one-character words for regular character cards, where that information is available
+
 
 ## V2.6 (2025-12-27)
 - buttons are always shown in Traverse navbar
