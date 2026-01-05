@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Traverse2Anki
 // @description  Export Traverse cards to Anki
-// @version      2.6.2
+// @version      2.6.3
 // @require      https://cdn.jsdelivr.net/npm/handlebars@latest/dist/handlebars.js
 // @grant        unsafeWindow
 // @grant        GM.setValue
@@ -31,7 +31,7 @@
     DEFAULTS: {
       MOVIE: {
         DECK: "Mining", MODEL: "Character Note", TAG: "4-MAKE-A-MOVIE", CONFIG_KEY: "MOVIE_DECK",
-        FIELDS: {HANZI: "hanzi", KEYWORD: "keyword", PINYIN: "pinyin", ACTOR: "actor", SET: "set", PROPS: "props", NOTES: "notes", "SOURCE LESSON": "source lesson"}, // {field_in_anki: field_from_t2a}
+        FIELDS: {HANZI: "hanzi", KEYWORD: "keyword", PINYIN: "pinyin", ACTOR: "actor", SET: "set", PROPS: "props", NOTES: "notes", "SOURCE LESSON": "source lesson", "IS IT A ONE-CHARACTER WORD?": "is one character word"}, // {field_in_anki: field_from_t2a}
         IMAGE_FIELDS: {"STROKE ORDER": "image"},
       	AUDIO_FIELDS: {AUDIO: "audio"},
       },
@@ -943,6 +943,14 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
             card.notes.push(textValue);
           }
         }
+        if (elm.textContent && elm.getAttribute('id').includes("-IS IT A ONE-CHARACTER WORD?")) {
+          let textValue = elm.textContent;
+          if (textValue.toLowerCase() == 'y') {
+            card["is one character word"] = "y";
+          } else {
+            card["is one character word"] = "";
+          }
+        }
       }
     },
 
@@ -1296,6 +1304,7 @@ img { width: auto;   height: auto;   max-width: 300px;   max-height: 300px; }`,
         'tags': card.tags,
         'top-down': [],
         'word': "",
+        "is one character word": "",
       };
 
       for (let idx in children) {
