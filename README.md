@@ -21,9 +21,10 @@ It does not preserve existing review history.
 
 # Quick Installation
 
-- Install GreasyMonkey/TamperMonkey extension for your browser.
+- Install GreaseMonkey/TamperMonkey extension for your browser.
 - install the user script in GreaseMonkey/TamperMonkey: https://github.com/soborg/travToAnki/raw/refs/heads/main/travToAnki.user.js
 - Install the `example.apkg` deck in Anki (contains required note types): https://github.com/soborg/travToAnki/raw/refs/heads/main/example.apkg
+- install 'AnkiConnect' as an Anki addon.
 
 
 See [Installation](https://github.com/soborg/travToAnki/blob/main/README.md#installation) chapter below for more details and quirks.
@@ -150,7 +151,7 @@ If you use Chrome, or one derived from Chromium (Edge, Brave, etc.), it might as
 The purpose of this external file is to handle HTML templating within the tool (it's used for creating the menu and button, and stuff).
 
 
-### Special settings if you're using Chrome
+### Special settings if you're using Chrome or Chromium based derivatives
 
 - In Anki AnkiConnect settings (`Tools -> Add-ons -> click AnkiConnect -> Config`), add `"https://traverse.link"` to `webCorsOriginList` list. Complete config should be as follows, assuming nothing else was previously changed:
 
@@ -175,7 +176,7 @@ The purpose of this external file is to handle HTML templating within the tool (
 * Open the following user script: https://github.com/soborg/travToAnki/raw/refs/heads/main/travToAnki.user.js
 * A prompt should appear automatically, click Install.
 * Install the `example.apkg` example deck into your Anki to get the required notes (https://github.com/soborg/travToAnki/raw/refs/heads/main/example.apkg)
-* Open Traverse and verify there's an `Anki++` button when you enter a specific deck/level.
+* Open Traverse and verify there's an `Anki++` button in the top right corner.
 
 # Liability
 
